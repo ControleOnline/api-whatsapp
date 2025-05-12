@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redireciona HTTP para HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Proxy HTTPS para localhost:3000
+    RewriteCond %{HTTPS} on
+    RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+</IfModule>
+
+<IfModule mod_proxy.c>
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:3000/
+    ProxyPassReverse / http://localhost:3000/
+</IfModule>
