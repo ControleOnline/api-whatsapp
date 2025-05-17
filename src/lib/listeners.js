@@ -74,8 +74,8 @@ const baileysMessageListeners = (wbot, telefone) => {
           action: "receiveMessage",
           origin: messageData.remoteJid,
           destination: String(wbot.telefone),
-          message: JSON.stringify(messageData.content.body || null),
-          file: JSON.stringify(messageData.content.file || null),
+          message: JSON.stringify(messageData.content.body),
+          file: JSON.stringify(messageData.content.file),
         });
     }
   });
