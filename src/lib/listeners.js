@@ -94,7 +94,7 @@ const baileysMessageListeners = (wbot, telefone) => {
       };
       await sendWebhook(webhookUrl, {
         id: messageData.messageid,
-        action: "receiveMessage",
+        action: "updateMessage",
         origin: messageData.remoteJid,
         destination: String(wbot.telefone),
         message: JSON.stringify(messageData.update),
