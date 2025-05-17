@@ -23,7 +23,7 @@ app.use(express.text({ limit: '100mb' }))
 app.use(express.raw({ limit: '100mb' }))
 
 // Adiciona o Swagger UI no endpoint /
-app.use('/', swaggerUi.serve, swaggerUi.setup(specs))
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
 
 app.use(routes)
 
