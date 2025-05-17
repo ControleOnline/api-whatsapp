@@ -58,6 +58,9 @@ const baileysMessageListeners = (wbot, telefone) => {
   wbot.ev.on("messages.upsert", async (messageUpsert) => {
     if (messageUpsert.type !== "notify") return;
 
+    const webhookUrl = fetchWebHook(wbot, "webhook");
+    if (!webhookUrl) return;
+
     const messages = [];
     for await (const message of messageUpsert.messages) {
       if (!isValidMsg(message)) continue;
@@ -65,41 +68,38 @@ const baileysMessageListeners = (wbot, telefone) => {
       if (!env.FROMME && message.key.fromMe) continue;
 
       const messageData = await prepareMessageData(message, wbot);
-
-      messages.push(messageData);
+      if (messageData)
+        await sendWebhook(webhookUrl, {
+          id: messageData.messageid,
+          action: "receiveMessage",
+          origin: messageData.remoteJid,
+          destination: String(wbot.telefone),
+          message: JSON.stringify(messageData.content.body || null),
+          file: JSON.stringify(messageData.content.file || null),
+        });
     }
-
-    const webhookUrl = fetchWebHook(wbot, "webhook");
-    if (!webhookUrl || messages.length === 0) return;
-
-    await sendWebhook(webhookUrl, {
-      action: "messages.upsert",
-      messages: JSON.stringify(messages),
-      telefone: String(wbot.telefone),
-    });
   });
 
   wbot.ev.on("messages.update", async (messageUpdate) => {
     if (messageUpdate.length === 0) return;
+    const webhookUrl = fetchWebHook(wbot, "webhook");
+    if (!webhookUrl) return;
 
     const messages = [];
     for await (const message of messageUpdate) {
       const messageData = {
         messageid: message.key.id,
         update: message.update,
+        remoteJid: message.key.remoteJid.split("@")[0],
       };
-
-      messages.push(messageData);
+      await sendWebhook(webhookUrl, {
+        id: messageData.messageid,
+        action: "receiveMessage",
+        origin: messageData.remoteJid,
+        destination: String(wbot.telefone),
+        message: JSON.stringify(messageData.update),
+      });
     }
-
-    const webhookUrl = fetchWebHook(wbot, "webhook");
-    if (!webhookUrl) return;
-
-    await sendWebhook(webhookUrl, {
-      action: "messages.update",
-      messages: JSON.stringify(messages),
-      telefone: String(wbot.telefone),
-    });
   });
 };
 
