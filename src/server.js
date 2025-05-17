@@ -4,10 +4,10 @@ const fs = require('fs').promises
 const { initBaileysSocket } = require('./lib/libbaileys.js')
 const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
-const cors = require('cors')
+//const cors = require('cors')
 const env = require('./utils/Env.js')
-const swaggerUi = require('swagger-ui-express')
-const { specs } = require('./configs/swagger.js')
+//const swaggerUi = require('swagger-ui-express')
+//const { specs } = require('./configs/swagger.js')
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`)
@@ -16,14 +16,14 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express()
 
 app.use(fileUpload({ limits: { fileSize: 100 * 1024 * 1024 } }))
-app.use(cors({ credentials: true, origin: ['http://localhost:3000'] })) // Ajuste o origin conforme necessário
+//app.use(cors({ credentials: true, origin: ['http://localhost:3000'] })) // Ajuste o origin conforme necessário
 app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 1024 * 1024 * 100 }))
 app.use(express.text({ limit: '100mb' }))
 app.use(express.raw({ limit: '100mb' }))
 
 // Adiciona o Swagger UI no endpoint /
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
+//app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
 
 app.use(routes)
 
