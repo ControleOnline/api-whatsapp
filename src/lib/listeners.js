@@ -7,7 +7,11 @@ const env = require("../utils/Env.js");
 
 const sendWebhook = async (webhookUrl, data) => {
   try {
-    await axios.post(webhookUrl, data);
+    await axios.post(webhookUrl, data, {
+      headers: {
+        "api-token": env.API_KEY,
+      },
+    });
   } catch (error) {
     logger.error(error);
   }
