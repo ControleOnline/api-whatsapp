@@ -1,61 +1,57 @@
 const express = require('express')
 const fileUpload = require('express-fileupload')
-const fs = require('fs').promises
+const fs = require('fs')
 const { initBaileysSocket } = require('./lib/libbaileys.js')
 const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
-//const cors = require('cors')
+const cors = require('cors')
 const env = require('./utils/Env.js')
-//const swaggerUi = require('swagger-ui-express')
-//const { specs } = require('./configs/swagger.js')
 
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`)
-})
+process.setMaxListeners(0)
+require('events').EventEmitter.defaultMaxListeners = 0
 
 const app = express()
 
 app.use(fileUpload({ limits: { fileSize: 100 * 1024 * 1024 } }))
-//app.use(cors({ credentials: true, origin: ['http://localhost:3000'] })) // Ajuste o origin conforme necessário
-app.use(express.json({ limit: '100mb' }))
-app.use(express.urlencoded({ limit: '100mb', extended: true, parameterLimit: 1024 * 1024 * 100 }))
+app.use(
+  cors({
+    credentials: true,
+    origin: true,
+  }),
+)
+app.use(express.json())
+app.use(
+  express.urlencoded({
+    limit: '100mb',
+    extended: true,
+    parameterLimit: 1024 * 1024 * 100,
+  }),
+)
+
 app.use(express.text({ limit: '100mb' }))
 app.use(express.raw({ limit: '100mb' }))
-
-// Adiciona o Swagger UI no endpoint /
-//app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs))
-
 app.use(routes)
 
-// Global error handler
-app.use((err, req, res, next) => {
-  logger.error(`Server error: ${err.message}`)
-  res.status(500).json({ error: 'Internal server error' })
+const port = env.PORT || 9000
+
+app.listen(port, () => {
+  logger.info(`Servidor iniciado na porta ${port}`)
 })
 
-const port = parseInt(env.PORT) || 9000
+const sessions = fs.readdirSync('sessions')
 
-app.listen(port, async () => {
-  logger.info(`Servidor iniciado na porta ${port}`)
-  try {
-    const sessions = await fs.readdir('sessions')
-    let contador = 0
-    for (const session of sessions) {
-      if (session !== '.gitkeep') {
-        contador++
-        try {
-          const file = await fs.readFile(`sessions/${session}`, 'utf8')
-          const sessionData = JSON.parse(file)
-          if (sessionData.telefone) {
-            initBaileysSocket(sessionData.telefone)
-          }
-        } catch (error) {
-          logger.error(`Failed to process session ${session}: ${error.message}`)
-        }
+if (sessions.length > 0) {
+  let contador = 0
+  sessions.forEach((session) => {
+    if (session !== '.gitkeep') {
+      contador++
+      const file = fs.readFileSync(`sessions/${session}`, 'utf8')
+      const sessionData = JSON.parse(file)
+
+      if (sessionData.telefone) {
+        initBaileysSocket(sessionData.telefone)
       }
     }
-    logger.info(`Iniciando sessões, total de ${contador}`)
-  } catch (error) {
-    logger.error(`Failed to initialize sessions: ${error.message}`)
-  }
-})
+  })
+  logger.info(`Iniciando sessões, total de ${contador}`)
+}
