@@ -15,7 +15,7 @@ const file = z.object({
 
 const sendMediaSchema = z.object({
   number: z.string({ required_error: 'Obrigatório enviar um número' }),
-  caption: z.string().optional(),
+  message: z.string().optional(),
   file: file.or(z.array(file)),
 })
 

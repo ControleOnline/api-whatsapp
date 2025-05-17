@@ -11,16 +11,16 @@ const getBodyMessage = (msg) => {
 
   return (
     msg.message?.conversation ||
-    msg.message?.imageMessage?.caption ||
-    msg.message?.videoMessage?.caption ||
-    msg.message?.documentMessage?.caption ||
+    msg.message?.imageMessage?.message ||
+    msg.message?.videoMessage?.message ||
+    msg.message?.documentMessage?.message ||
     msg.message?.extendedTextMessage?.text ||
     msg.message?.buttonsMessage?.contentText ||
     msg.message?.buttonsResponseMessage?.selectedDisplayText ||
     msg.message?.listMessage?.description ||
     msg.message?.listResponseMessage?.title ||
     msg.message?.documentWithCaptionMessage?.message?.documentMessage
-      ?.caption ||
+      ?.message ||
     msg?.message?.contactMessage?.vcard ||
     location ||
     call ||

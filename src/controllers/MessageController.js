@@ -25,7 +25,7 @@ const sendText = async (req, res) => {
 
 const sendMedia = async (req, res) => {
   const { telefone } = req.params
-  const { number, caption } = req.body
+  const { number, message } = req.body
   const media = req.files
 
   if (!media) {
@@ -36,7 +36,7 @@ const sendMedia = async (req, res) => {
   try {
     const mediaRequest = await prepareMediaMessageContent({
       media: media.file,
-      body: caption,
+      body: message,
     })
 
     const sentMessage = await sendMessage({
