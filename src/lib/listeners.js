@@ -46,59 +46,69 @@ const baileysMessageListeners = (wbot, phone) => {
       }
     }
 
-    const webhookUrl = fetchWebHook(wbot, "webhook");
-    if (!webhookUrl) return;
+    const webhookUrls = fetchWebHook(wbot);
+    if (!webhookUrls) return;
 
-    await sendWebhook(webhookUrl, {
-      action: "messaging-history.set",
-      messages: JSON.stringify(conversas),
-    });
+    for (let index = 0; index < webhookUrls.length; index++) {
+      const webhookUrl = webhookUrls[index];
+      await sendWebhook(webhookUrl, {
+        action: "messaging-history.set",
+        messages: JSON.stringify(conversas),
+      });
+    }
   });
 
   wbot.ev.on("messages.upsert", async (messageUpsert) => {
     if (messageUpsert.type !== "notify") return;
 
-    const webhookUrl = fetchWebHook(wbot, "webhook");
-    if (!webhookUrl) return;
+    const webhookUrls = fetchWebHook(wbot);
+    if (!webhookUrls) return;
 
-    const messages = [];
-    for await (const message of messageUpsert.messages) {
-      if (!isValidMsg(message)) continue;
+    for (let index = 0; index < webhookUrls.length; index++) {
+      const webhookUrl = webhookUrls[index];
 
-      if (!env.FROMME && message.key.fromMe) continue;
+      const messages = [];
+      for await (const message of messageUpsert.messages) {
+        if (!isValidMsg(message)) continue;
 
-      const messageData = await prepareMessageData(message, wbot);
-      if (messageData)
-        await sendWebhook(webhookUrl, {
-          id: messageData.messageid,
-          action: "receiveMessage",
-          origin: messageData.remoteJid,
-          destination: String(wbot.phone),
-          message: JSON.stringify(messageData.content.body),
-          file: JSON.stringify(messageData.content.file),
-        });
+        if (!env.FROMME && message.key.fromMe) continue;
+
+        const messageData = await prepareMessageData(message, wbot);
+        if (messageData)
+          await sendWebhook(webhookUrl, {
+            id: messageData.messageid,
+            action: "receiveMessage",
+            origin: messageData.remoteJid,
+            destination: String(wbot.phone),
+            message: JSON.stringify(messageData.content.body),
+            file: JSON.stringify(messageData.content.file),
+          });
+      }
     }
   });
 
   wbot.ev.on("messages.update", async (messageUpdate) => {
     if (messageUpdate.length === 0) return;
-    const webhookUrl = fetchWebHook(wbot, "webhook");
-    if (!webhookUrl) return;
+    const webhookUrls = fetchWebHook(wbot);
+    if (!webhookUrls) return;
 
-    const messages = [];
-    for await (const message of messageUpdate) {
-      const messageData = {
-        messageid: message.key.id,
-        update: message.update,
-        remoteJid: message.key.remoteJid.split("@")[0],
-      };
-      await sendWebhook(webhookUrl, {
-        id: messageData.messageid,
-        action: "updateMessage",
-        origin: messageData.remoteJid,
-        destination: String(wbot.phone),
-        message: JSON.stringify(messageData.update),
-      });
+    for (let index = 0; index < webhookUrls.length; index++) {
+      const webhookUrl = webhookUrls[index];
+      const messages = [];
+      for await (const message of messageUpdate) {
+        const messageData = {
+          messageid: message.key.id,
+          update: message.update,
+          remoteJid: message.key.remoteJid.split("@")[0],
+        };
+        await sendWebhook(webhookUrl, {
+          id: messageData.messageid,
+          action: "updateMessage",
+          origin: messageData.remoteJid,
+          destination: String(wbot.phone),
+          message: JSON.stringify(messageData.update),
+        });
+      }
     }
   });
 };
