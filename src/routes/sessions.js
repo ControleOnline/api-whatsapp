@@ -7,8 +7,6 @@ const SessionSchemas = require('../schemas/Controller/sessionSchemas.js')
 const sessionRoutes = Router()
 
 sessionRoutes.get('/', isAuth, SessionController.index)
-sessionRoutes.get('/qr/:telefone', isAuth, SessionController.getQRCode)
-sessionRoutes.get('/status/:telefone', isAuth, SessionController.status)
 sessionRoutes.post(
   '/start',
   isAuth,

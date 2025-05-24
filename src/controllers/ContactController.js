@@ -2,12 +2,12 @@ const { getWbot } = require('../lib/libbaileys.js')
 const logger = require('../utils/logger.js')
 
 const list = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
 
   const contacts = []
 
   try {
-    const wbot = getWbot(telefone)
+    const wbot = getWbot(phone)
 
     Object.values(wbot.store?.contacts).forEach((contact) => {
       const number = contact.id.split('@')[0]
@@ -27,11 +27,11 @@ const list = async (req, res) => {
 }
 
 const checkContact = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
   const { number } = req.body
 
   try {
-    const wbot = getWbot(telefone)
+    const wbot = getWbot(phone)
 
     const validNumber = await wbot.onWhatsApp(
       `${number.split('@')[0]}@s.whatsapp.net`,
@@ -55,11 +55,11 @@ const checkContact = async (req, res) => {
 }
 
 const getProfilePicture = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
   const { number } = req.body
 
   try {
-    const wbot = getWbot(telefone)
+    const wbot = getWbot(phone)
     const validNumber = await wbot.onWhatsApp(`${number}@s.whatsapp.net`)
 
     if (validNumber && validNumber.length > 0) {

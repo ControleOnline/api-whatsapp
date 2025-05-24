@@ -48,8 +48,8 @@ if (sessions.length > 0) {
       const file = fs.readFileSync(`sessions/${session}`, 'utf8')
       const sessionData = JSON.parse(file)
 
-      if (sessionData.telefone) {
-        initBaileysSocket(sessionData.telefone)
+      if (sessionData.phone) {
+        initBaileysSocket(sessionData.phone)
       }
     }
   })

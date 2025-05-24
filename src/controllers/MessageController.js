@@ -5,12 +5,12 @@ const sendMessage = require('../lib/helpers/sendMessage.js')
 const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
 const sendText = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
   const { number, message } = req.body
 
   try {
     const sentMessage = await sendMessage({
-      telefone,
+      phone,
       number,
       content: { text: message },
     })
@@ -24,7 +24,7 @@ const sendText = async (req, res) => {
 }
 
 const sendMedia = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
   const { number, message } = req.body
   const media = req.files
 
@@ -40,7 +40,7 @@ const sendMedia = async (req, res) => {
     })
 
     const sentMessage = await sendMessage({
-      telefone,
+      phone,
       number,
       content: mediaRequest,
     })
@@ -53,10 +53,10 @@ const sendMedia = async (req, res) => {
 }
 
 const unreadMessages = async (req, res) => {
-  const { telefone } = req.params
+  const { phone } = req.params
 
   try {
-    const messages = await GetAllUnreadMessages(telefone)
+    const messages = await GetAllUnreadMessages(phone)
 
     res.status(200).json(messages)
   } catch (error) {

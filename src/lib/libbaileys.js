@@ -22,8 +22,8 @@ const loggerBaileys = P({
 const sessions = []
 const retriesQrCodeMap = new Map()
 
-const getWbot = (telefone) => {
-  const sessionIndex = sessions.findIndex((s) => s.telefone === telefone)
+const getWbot = (phone) => {
+  const sessionIndex = sessions.findIndex((s) => s.phone === phone)
 
   if (sessionIndex === -1) {
     return null
@@ -31,14 +31,14 @@ const getWbot = (telefone) => {
   return sessions[sessionIndex]
 }
 
-const removeWbot = async (telefone) => {
-  const sessionIndex = sessions.findIndex((s) => s.telefone === telefone)
+const removeWbot = async (phone) => {
+  const sessionIndex = sessions.findIndex((s) => s.phone === phone)
   if (sessionIndex !== -1) {
     try {
       if (env.STORE) {
         if (sessions[sessionIndex].interval)
           clearInterval(sessions[sessionIndex].interval)
-        fs.rmSync(`store/${telefone}.json`, {
+        fs.rmSync(`store/${phone}.json`, {
           force: true,
         })
       }
@@ -78,7 +78,7 @@ const removeWbot = async (telefone) => {
   }
 
   try {
-    fs.rmSync(`sessions/${telefone}.json`, {
+    fs.rmSync(`sessions/${phone}.json`, {
       force: true,
     })
   } catch (error) {
@@ -86,7 +86,7 @@ const removeWbot = async (telefone) => {
   }
 
   try {
-    fs.rmSync(`data/${telefone}`, {
+    fs.rmSync(`data/${phone}`, {
       recursive: true,
       force: true,
     })
@@ -95,7 +95,7 @@ const removeWbot = async (telefone) => {
   }
 
   try {
-    fs.rmSync(`data/${telefone}.json`, {
+    fs.rmSync(`data/${phone}.json`, {
       force: true,
     })
   } catch (error) {
@@ -103,16 +103,16 @@ const removeWbot = async (telefone) => {
   }
 }
 
-const initBaileysSocket = async (telefone) => {
+const initBaileysSocket = async (phone) => {
   const { version } = await fetchLatestBaileysVersion()
-  console.log('Iniciando Baileys Telefone: ', telefone, 'Versão: ', version)
+  console.log('Iniciando Baileys phone: ', phone, 'Versão: ', version)
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       const store = makeInMemoryStore({ logger: loggerBaileys })
 
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
-      const sessionPath = `data/${telefone}`
+      const sessionPath = `data/${phone}`
       const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
 
       let retriesQrCode = 0
@@ -139,7 +139,7 @@ const initBaileysSocket = async (telefone) => {
         version,
         syncFullHistory: true,
         getMessage: async (key) => {
-          const { store } = getWbot(telefone)
+          const { store } = getWbot(phone)
 
           if (store) {
             const msg = await store.loadMessage(key.remoteJid, key.id)
@@ -152,28 +152,28 @@ const initBaileysSocket = async (telefone) => {
       })
 
       sock.store = store
-      sock.telefone = telefone
+      sock.phone = phone
 
       if (env.STORE) {
-        if (fs.existsSync(`store/${telefone}.json`))
-          sock.store.readFromFile(`store/${telefone}.json`)
+        if (fs.existsSync(`store/${phone}.json`))
+          sock.store.readFromFile(`store/${phone}.json`)
         if (sock.interval) clearInterval(sock.interval)
         sock.interval = setInterval(() => {
-          sock.store.writeToFile(`store/${telefone}.json`)
+          sock.store.writeToFile(`store/${phone}.json`)
         }, 10_000)
       }
 
       sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr, isOnline } = update
 
-        sock.telefone = telefone
+        sock.phone = phone
 
         if (qr) {
-          const retries = retriesQrCodeMap.get(telefone) || 0
+          const retries = retriesQrCodeMap.get(phone) || 0
 
           if (retries && retries > 3) {
             try {
-              const path = `data/${slugfy(telefone)}.json`
+              const path = `data/${slugfy(phone)}.json`
 
               if (fs.existsSync(path)) fs.unlinkSync(path)
             } catch (e) {
@@ -181,15 +181,15 @@ const initBaileysSocket = async (telefone) => {
             }
 
             await sock.ws.close()
-            retriesQrCodeMap.delete(telefone)
+            retriesQrCodeMap.delete(phone)
             return
           }
-          retriesQrCodeMap.set(telefone, (retriesQrCode += 1))
+          retriesQrCodeMap.set(phone, (retriesQrCode += 1))
 
           sock.qr = qr
         }
 
-        const sessionIndex = sessions.findIndex((s) => s.telefone === telefone)
+        const sessionIndex = sessions.findIndex((s) => s.phone === phone)
 
         if (sessionIndex === -1) {
           sessions.push(sock)
@@ -203,7 +203,7 @@ const initBaileysSocket = async (telefone) => {
           isOnline
         ) {
           const sessionIndex = sessions.findIndex(
-            (s) => s.telefone === telefone,
+            (s) => s.phone === phone,
           )
 
           if (sessionIndex === -1) {
@@ -212,9 +212,9 @@ const initBaileysSocket = async (telefone) => {
             sessions[sessionIndex] = sock
           }
 
-          logger.info(`Sessão ${telefone} pronta!`)
+          logger.info(`Sessão ${phone} pronta!`)
           logger.info(`Existe(m) ${sessions.length} sessão(ões) criada(s).`)
-          console.log(sessions.map((s) => s.telefone))
+          console.log(sessions.map((s) => s.phone))
           resolve(sock)
         }
 
@@ -224,8 +224,8 @@ const initBaileysSocket = async (telefone) => {
 
           if (!shouldReconnect) {
             try {
-              await removeWbot(telefone)
-              logger.info(`Conexão: ${telefone} encerrada.`)
+              await removeWbot(phone)
+              logger.info(`Conexão: ${phone} encerrada.`)
             } catch (error) {
               logger.error(`Erro ao excluir a sessão ${error}`)
             }
@@ -233,12 +233,12 @@ const initBaileysSocket = async (telefone) => {
 
           // reconnect if not logged out
           if (shouldReconnect) {
-            setTimeout(() => initBaileysSocket(telefone), 2000)
+            setTimeout(() => initBaileysSocket(phone), 2000)
           }
         }
       })
 
-      baileysMessageListeners(sock, telefone)
+      baileysMessageListeners(sock, phone)
       // credentials updated -- save them
       sock.ev.on('creds.update', async () => {
         await saveCreds()
@@ -248,7 +248,7 @@ const initBaileysSocket = async (telefone) => {
       resolve(sock)
     } catch (error) {
       logger.error(error)
-      reject(initBaileysSocket(telefone))
+      reject(initBaileysSocket(phone))
     }
   })
 }

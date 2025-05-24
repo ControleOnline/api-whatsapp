@@ -17,8 +17,8 @@ const sendWebhook = async (webhookUrl, data) => {
   }
 };
 
-const baileysMessageListeners = (wbot, telefone) => {
-  logger.info(`Iniciando sessão ${telefone}`);
+const baileysMessageListeners = (wbot, phone) => {
+  logger.info(`Iniciando sessão ${phone}`);
 
   wbot.ev.on("messaging-history.set", async (data) => {
     const chatsNaoLidos = [];
@@ -73,7 +73,7 @@ const baileysMessageListeners = (wbot, telefone) => {
           id: messageData.messageid,
           action: "receiveMessage",
           origin: messageData.remoteJid,
-          destination: String(wbot.telefone),
+          destination: String(wbot.phone),
           message: JSON.stringify(messageData.content.body),
           file: JSON.stringify(messageData.content.file),
         });
@@ -96,7 +96,7 @@ const baileysMessageListeners = (wbot, telefone) => {
         id: messageData.messageid,
         action: "updateMessage",
         origin: messageData.remoteJid,
-        destination: String(wbot.telefone),
+        destination: String(wbot.phone),
         message: JSON.stringify(messageData.update),
       });
     }

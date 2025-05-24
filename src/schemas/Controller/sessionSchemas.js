@@ -1,10 +1,10 @@
 const { z } = require("zod");
 
 const createSessionSchema = z.object({
-  telefone: z
+  phone: z
     .string()
-    .min(12, "Minimo de 12 digitos para o telefone")
-    .max(13, "Maximo de 13 digitos o telefone"),
+    .min(12, "Minimo de 12 digitos para o phone")
+    .max(13, "Maximo de 13 digitos o phone"),
   webhooks: z
     .object({
       webhook: z.string().url().optional(),
@@ -13,17 +13,17 @@ const createSessionSchema = z.object({
 });
 
 const deleteSessionSchema = z.object({
-  telefone: z
+  phone: z
     .string()
-    .min(12, "Minimo de 12 digitos para o telefone")
-    .max(13, "Maximo de 13 digitos o telefone"),
+    .min(12, "Minimo de 12 digitos para o phone")
+    .max(13, "Maximo de 13 digitos o phone"),
 });
 
 const addWebhookSchema = z.object({
-  telefone: z
+  phone: z
     .string()
-    .min(12, "Minimo de 12 digitos para o telefone")
-    .max(13, "Maximo de 13 digitos o telefone"),
+    .min(12, "Minimo de 12 digitos para o phone")
+    .max(13, "Maximo de 13 digitos o phone"),
   webhooks: z.string().url(),
   type: z.string(),
 });

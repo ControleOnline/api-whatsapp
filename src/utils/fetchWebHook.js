@@ -4,12 +4,12 @@ const logger = require('./logger.js')
 const fetchWebHook = (wbot, type) => {
   if (!wbot.webhooks || !wbot.webhooks[type]) {
     const sessionData = JSON.parse(
-      readFileSync(`sessions/${wbot.telefone}.json`, 'utf8'),
+      readFileSync(`sessions/${wbot.phone}.json`, 'utf8'),
     )
 
     if (!sessionData.webhooks?.[type]) {
       logger.error(
-        `Webhook ${type} não configurado para a sessão ${wbot.telefone}`,
+        `Webhook ${type} não configurado para a sessão ${wbot.phone}`,
       )
       return ''
     }

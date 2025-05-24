@@ -6,16 +6,16 @@ const ContactSchemas = require('../schemas/Controller/contactSchemas.js')
 
 const contactsRoutes = express.Router()
 
-contactsRoutes.get('/:telefone/list', isAuth, ContactController.list)
+contactsRoutes.get('/:phone/list', isAuth, ContactController.list)
 contactsRoutes.post(
-  '/:telefone/check',
+  '/:phone/check',
   isAuth,
   validateData(ContactSchemas.checkContactSchema),
   ContactController.checkContact,
 )
 
 contactsRoutes.post(
-  '/:telefone/profile-picture',
+  '/:phone/profile-picture',
   isAuth,
   validateData(ContactSchemas.getProfilePictureSchema),
   ContactController.getProfilePicture,

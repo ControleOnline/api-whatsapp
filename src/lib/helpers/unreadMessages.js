@@ -4,10 +4,10 @@ const prepareMessageData = require('../handlers/prepareMessageData')
 const env = require('../../utils/Env')
 const isValidMsg = require('./isValidMessage')
 
-const GetAllUnreadMessages = async (telefone) => {
+const GetAllUnreadMessages = async (phone) => {
   console.log('Chamando o GetAllUnreadMessages')
   try {
-    const wbot = getWbot(telefone)
+    const wbot = getWbot(phone)
 
     const naolidas = []
     const messages = []

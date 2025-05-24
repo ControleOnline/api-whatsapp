@@ -7,7 +7,7 @@ const ChatSchemas = require('../schemas/Controller/chatSchemas.js')
 const chatsRoutes = express.Router()
 
 chatsRoutes.post(
-  '/:telefone/read',
+  '/:phone/read',
   isAuth,
   validateData(ChatSchemas.readMessagesSchema),
   readMessages,

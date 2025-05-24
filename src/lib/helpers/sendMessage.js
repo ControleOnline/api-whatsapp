@@ -1,9 +1,9 @@
 const { getWbot } = require('../libbaileys.js')
 const logger = require('../../utils/logger.js')
 
-const sendMessage = async ({ telefone, number, content }) => {
+const sendMessage = async ({ phone, number, content }) => {
   try {
-    const wbot = getWbot(telefone)
+    const wbot = getWbot(phone)
 
     const validNumber = await wbot.onWhatsApp(`${number}@s.whatsapp.net`)
 

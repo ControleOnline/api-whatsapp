@@ -7,18 +7,18 @@ const MessageSchemas = require('../schemas/Controller/messageSchemas.js')
 const messageRoutes = express.Router()
 
 messageRoutes.post(
-  '/:telefone/text',
+  '/:phone/text',
   isAuth,
   validateData(MessageSchemas.sendTextSchema),
   MessageController.sendText,
 )
 messageRoutes.post(
-  '/:telefone/media',
+  '/:phone/media',
   isAuth,
   validateData(MessageSchemas.sendMediaSchema),
   MessageController.sendMedia,
 )
 
-messageRoutes.get('/:telefone/unread', isAuth, MessageController.unreadMessages)
+messageRoutes.get('/:phone/unread', isAuth, MessageController.unreadMessages)
 
 module.exports = messageRoutes
