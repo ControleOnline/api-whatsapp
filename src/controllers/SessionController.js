@@ -89,4 +89,4 @@ const addWebhook = async (req, res) => {
   res.status(200).json({ message: "Webhook adicionado com sucesso" });
 };
 
-module.exports = { index, store, addWebhook, getQRCode, remove, status };
+module.exports = { index, store, addWebhook, remove };
