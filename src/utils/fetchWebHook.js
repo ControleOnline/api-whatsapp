@@ -15,6 +15,8 @@ const fetchWebHook = (wbot) => {
     (item, index, self) => self.indexOf(item) === index
   );
 
+  console.log(wbot.webhooks);
+
   return wbot.webhooks;
 };
 
