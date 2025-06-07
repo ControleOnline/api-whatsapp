@@ -10,13 +10,10 @@ const fetchWebHook = (wbot) => {
     wbot.webhooks = sessionData.webhooks || [];
   }
 
-  console.log(env);
   wbot.webhooks.push(env.WEBHOOK);
   wbot.webhooks = wbot.webhooks.filter(
     (item, index, self) => self.indexOf(item) === index
   );
-
-  console.log(wbot.webhooks);
 
   return wbot.webhooks;
 };
