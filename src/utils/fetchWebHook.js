@@ -7,8 +7,9 @@ const fetchWebHook = (wbot) => {
     const sessionData = JSON.parse(
       readFileSync(`sessions/${wbot.phone}.json`, "utf8")
     );
-    wbot.webhooks = sessionData.webhooks;
+    wbot.webhooks = sessionData.webhooks || [];
   }
+
   wbot.webhooks.push(env.WEBHOOK);
   wbot.webhooks = wbot.webhooks.filter(
     (item, index, self) => self.indexOf(item) === index
