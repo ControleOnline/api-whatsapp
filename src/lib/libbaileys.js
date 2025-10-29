@@ -1,9 +1,8 @@
 const {
   default: makeWASocket,
   DisconnectReason,
-  fetchLatestBaileysVersion,
+  fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
-  makeInMemoryStore,
   useMultiFileAuthState,
 } = require('@whiskeysockets/baileys')
 const P = require('pino')
@@ -104,8 +103,21 @@ const removeWbot = async (phone) => {
 }
 
 const initBaileysSocket = async (phone) => {
-  const { version } = await fetchLatestBaileysVersion()
-  console.log('Iniciando Baileys phone: ', phone, 'Versão: ', version)
+  let version
+  if (env.WA_VERSION) {
+    version = env.WA_VERSION
+    console.log('Usando versão manual do WhatsApp Web:', version)
+  } else {
+    const versionInfo = await fetchLatestWaWebVersion()
+    version = versionInfo.version
+    console.log(
+      'Usando versão automática do WhatsApp Web:',
+      version,
+      versionInfo.isLatest ? '(latest)' : '(fallback)',
+    )
+  }
+
+  console.log('Iniciando Baileys phone:', phone, 'Versão:', version)
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
