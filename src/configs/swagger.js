@@ -6,7 +6,8 @@ const options = {
     info: {
       title: 'API de Gerenciamento de Mensagens',
       version: '1.0.0',
-      description: 'Documentação da API para gerenciar sessões, chats, contatos e mensagens.',
+      description:
+        'Documentação da API para gerenciar sessões, chats, contatos e mensagens.',
     },
     servers: [
       {
@@ -24,7 +25,7 @@ const options = {
       },
     },
   },
-  apis: ['../routes/*.js'], 
+  apis: ['../routes/*.js'],
 }
 
 const specs = swaggerJsdoc(options)

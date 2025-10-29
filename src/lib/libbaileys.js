@@ -109,7 +109,11 @@ const initBaileysSocket = async (phone) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      const store = { bind: () => {}, writeToFile: () => {}, readFromFile: () => {} }
+      const store = {
+        bind: () => {},
+        writeToFile: () => {},
+        readFromFile: () => {},
+      }
 
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
       const sessionPath = `data/${phone}`
@@ -201,9 +205,7 @@ const initBaileysSocket = async (phone) => {
           update?.receivedPendingNotifications ||
           isOnline
         ) {
-          const sessionIndex = sessions.findIndex(
-            (s) => s.phone === phone,
-          )
+          const sessionIndex = sessions.findIndex((s) => s.phone === phone)
 
           if (sessionIndex === -1) {
             sessions.push(sock)
