@@ -109,7 +109,7 @@ const initBaileysSocket = async (phone) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      const store = makeInMemoryStore({ logger: loggerBaileys })
+      const store = { bind: () => {}, writeToFile: () => {}, readFromFile: () => {} }
 
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
       const sessionPath = `data/${phone}`
