@@ -118,7 +118,6 @@ const initBaileysSocket = async (phone) => {
       let retriesQrCode = 0
       const sock = makeWASocket({
         logger: loggerBaileys,
-        printQRInTerminal: true,
         linkPreviewImageThumbnailWidth: 150,
         generateHighQualityLinkPreview: true,
         receivedPendingNotifications: true,
