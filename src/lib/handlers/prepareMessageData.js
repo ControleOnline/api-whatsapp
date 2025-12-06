@@ -4,11 +4,10 @@ const getContentType = require('../helpers/getContentType.js')
 const getMediaContent = require('../helpers/getMediaContent.js')
 
 const prepareMessageData = async (message, wbot) => {
-  const count = wbot.store?.chats.get(
-    String(message.key.remoteJid || message.key.participant),
-  )
+  const chatId = String(message?.key?.remoteJid || message?.key?.participant || "")
+  const count = wbot?.store?.chats?.get ? wbot.store.chats.get(chatId) : null
 
-  const unreadMessages = message.key.fromMe ? 0 : count?.unreadCount || 1
+  const unreadMessages = message?.key?.fromMe ? 0 : count?.unreadCount || 1
   const media = getMediaContent(message)
   const mediaType = getContentType(message, media)
 
