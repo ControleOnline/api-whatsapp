@@ -31,75 +31,27 @@ const getWbot = (phone) => {
 }
 
 const removeWbot = async (phone) => {
-  const sessionIndex = sessions.findIndex((s) => s.phone === phone)
-  if (sessionIndex !== -1) {
-    try {
-      if (env.STORE) {
-        if (sessions[sessionIndex].interval)
-          clearInterval(sessions[sessionIndex].interval)
-        fs.rmSync(`store/${phone}.json`, {
-          force: true,
-        })
-      }
-    } catch (error) {
-      logger.error(error)
-    }
+  const sessionIndex = sessions.findIndex(s => s.phone === phone)
+  if (sessionIndex === -1) return
 
-    try {
-      await sessions[sessionIndex].logout()
-    } catch (error) {
-      logger.error(error)
-    }
-
-    try {
-      sessions[sessionIndex].ev.removeAllListeners('connection.update')
-    } catch (error) {
-      logger.error(error)
-    }
-
-    try {
-      sessions[sessionIndex].ev.removeAllListeners('chats.update')
-    } catch (error) {
-      logger.error(error)
-    }
-
-    try {
-      await sessions[sessionIndex].ws.close()
-    } catch (error) {
-      logger.error(error)
-    }
-
-    try {
-      sessions.splice(sessionIndex, 1)
-    } catch (error) {
-      logger.error(error)
-    }
-  }
+  const sock = sessions[sessionIndex]
 
   try {
-    fs.rmSync(`sessions/${phone}.json`, {
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
+    if (sock.interval) clearInterval(sock.interval)
+  } catch {}
 
   try {
-    fs.rmSync(`data/${phone}`, {
-      recursive: true,
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
+    sock.ev.removeAllListeners()
+  } catch {}
+
+  sessions.splice(sessionIndex, 1)
 
   try {
-    fs.rmSync(`data/${phone}.json`, {
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
+    fs.rmSync(`store/${phone}.json`, { force: true })
+    fs.rmSync(`sessions/${phone}.json`, { force: true })
+    fs.rmSync(`data/${phone}`, { recursive: true, force: true })
+    fs.rmSync(`data/${phone}.json`, { force: true })
+  } catch {}
 }
 
 const initBaileysSocket = async (phone) => {
