@@ -152,7 +152,7 @@ const initBaileysSocket = async (phone) => {
           ),
         },
         version,
-        syncFullHistory: false,
+        syncFullHistory: true,
         getMessage: async (key) => {
           const { store } = getWbot(phone)
 
