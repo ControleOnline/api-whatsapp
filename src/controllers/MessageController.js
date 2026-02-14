@@ -19,7 +19,7 @@ const sendText = async (req, res) => {
       res.status(200).json({ message: 'Enviada com sucesso' })
     }
   } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de texto' })
+    res.status(400).json({ message: 'Erro ao enviar mensagem de texto: ' + error?.message })
   }
 }
 

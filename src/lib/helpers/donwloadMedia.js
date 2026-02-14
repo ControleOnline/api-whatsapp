@@ -1,7 +1,7 @@
 const {
   downloadContentFromMessage,
   downloadMediaMessage,
-} = require('@whiskeysockets/baileys')
+} = require('baileys')
 const P = require('pino')
 
 const logger = require('../../utils/logger.js')

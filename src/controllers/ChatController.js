@@ -7,9 +7,7 @@ const readMessages = async (req, res) => {
   try {
     const wbot = getWbot(phone)
 
-    const validNumber = await wbot.onWhatsApp(
-      `${req.body.remoteJid}@s.whatsapp.net`,
-    )
+    const validNumber = await wbot.onWhatsApp(req.body.remoteJid)
 
     if (validNumber && validNumber.length > 0) {
       const message = {

@@ -1,19 +1,23 @@
 const { getWbot } = require('../libbaileys.js')
 const logger = require('../../utils/logger.js')
+const {store} = require("../libbaileys");
 
 const sendMessage = async ({ phone, number, content }) => {
   try {
     const wbot = getWbot(phone)
 
-    const validNumber = await wbot.onWhatsApp(`${number}@s.whatsapp.net`)
+    const validNumber = await wbot.onWhatsApp(number)
 
     if (validNumber && validNumber.length > 0) {
-      return await wbot.sendMessage(validNumber[0].jid, content)
+      const message = await wbot.sendMessage(validNumber[0].jid, content)
+      store.messages.set(message.key.id, message)
+      return true
     } else {
-      throw new Error('Contato invalido')
+      throw new Error('Contato invalido: ' + phone)
     }
   } catch (error) {
     logger.error(error)
+    throw new Error(error)
   }
 }
 

@@ -1,5 +1,4 @@
 const { readFileSync } = require('fs')
-const logger = require('./logger.js')
 const env = require('../utils/Env.js')
 
 const fetchWebHook = (wbot) => {

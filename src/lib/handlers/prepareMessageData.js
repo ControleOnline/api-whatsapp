@@ -16,6 +16,16 @@ const prepareMessageData = async (message, wbot) => {
     file = await downloadMedia(wbot, message, media, mediaType)
   }
 
+  let buttonsJson, listsJson, buttonTextList;
+  if (message.message?.buttonsMessage) {
+    buttonsJson = JSON.stringify(message.message.buttonsMessage.buttons);
+  }
+
+  if (message.message?.listMessage) {
+    listsJson = JSON.stringify(message.message.listMessage.sections);
+    buttonTextList = message.message.listMessage.buttonText;
+  }
+
   return {
     messageid: message.key.id,
     fromMe: message.key.fromMe,
@@ -27,6 +37,8 @@ const prepareMessageData = async (message, wbot) => {
       mediaType,
       file,
       body: getBodyMessage(message),
+      buttonsJson,
+      lists: { listsJson, buttonTextList },
     },
   }
 }

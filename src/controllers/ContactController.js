@@ -1,29 +1,41 @@
 const { getWbot } = require('../lib/libbaileys.js')
 const logger = require('../utils/logger.js')
+const {readFileSync} = require("fs");
+const slugfy = require('../utils/slugfy.js')
 
 const list = async (req, res) => {
   const { phone } = req.params
 
-  const contacts = []
+  const contacts = [];
 
   try {
-    const wbot = getWbot(phone)
+    const wbot = getWbot(phone);
 
-    Object.values(wbot.store?.contacts).forEach((contact) => {
-      const number = contact.id.split('@')[0]
-      if (number.length > 10) {
-        contacts.push({
-          name: contact.name,
-          number,
-        })
-      }
-    })
+    if (!wbot) {
+      res.status(400).json({ message: "Sessão não encontrada." });
+      return;
+    }
+
+    const path = `data/${slugfy(wbot.phone)}.json`;
+    const contactsBuffer = readFileSync(path);
+    const contactsData = JSON.parse(contactsBuffer.toString());
+    const contactsFiltered = contactsData.map((c) => {
+      if (c.id === "status@broadcast" || c.id.includes("g.us")) return false;
+      const number = c.id.split("@")[0];
+
+      return {
+        number,
+        name: c.name
+      };
+    });
+
+    contacts.push(...contactsFiltered);
   } catch (err) {
-    logger.error(`Could not get whatsapp contacts from phone. ${err}`)
-    res.status(400).json({ message: 'Não foi possível obter os contatos.' })
+    logger.error(`Could not get whatsapp contacts from phone. ${err}`);
+    res.status(400).json({ message: "Não foi possível obter os contatos." });
   }
 
-  res.status(200).json(contacts)
+  res.status(200).json(contacts);
 }
 
 const checkContact = async (req, res) => {
@@ -33,9 +45,7 @@ const checkContact = async (req, res) => {
   try {
     const wbot = getWbot(phone)
 
-    const validNumber = await wbot.onWhatsApp(
-      `${number.split('@')[0]}@s.whatsapp.net`,
-    )
+    const validNumber = await wbot.onWhatsApp(number.split('@')[0])
 
     let contact = {
       number,
@@ -60,7 +70,7 @@ const getProfilePicture = async (req, res) => {
 
   try {
     const wbot = getWbot(phone)
-    const validNumber = await wbot.onWhatsApp(`${number}@s.whatsapp.net`)
+    const validNumber = await wbot.onWhatsApp(number)
 
     if (validNumber && validNumber.length > 0) {
       const picture = await wbot.profilePictureUrl(validNumber[0].jid, 'image')
