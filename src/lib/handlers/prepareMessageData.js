@@ -2,14 +2,30 @@ const downloadMedia = require('../helpers/donwloadMedia.js')
 const getBodyMessage = require('../helpers/getBodyMessage.js')
 const getContentType = require('../helpers/getContentType.js')
 const getMediaContent = require('../helpers/getMediaContent.js')
+const {jidNormalizedUser} = require("baileys");
+const {getLidByJid, saveContact} = require("../helpers/contactsMemory");
+const {replaceNonDigits} = require("../../utils/replaceNonDigits");
 
 const prepareMessageData = async (message, wbot) => {
-  const chatId = String(message?.key?.remoteJid || message?.key?.participant || "")
-  const count = wbot?.store?.chats?.get ? wbot.store.chats.get(chatId) : null
+  const rawJidLid = String(message?.key?.remoteJid || message?.key?.participant || "")
+  const rawNumber = jidNormalizedUser((message?.key?.senderPn ?? message?.key?.remoteJid) || "")
 
-  const unreadMessages = message?.key?.fromMe ? 0 : count?.unreadCount || 1
+  const isLid = rawJidLid?.endsWith("@lid");
+
+  const jidLid = replaceNonDigits(rawJidLid);
+  const jid = replaceNonDigits(rawNumber);
+
+  const unreadMessages = message?.key?.fromMe ? 0 :  1
   const media = getMediaContent(message)
   const mediaType = getContentType(message, media)
+
+  if (isLid) {
+    if (!getLidByJid(jid)) {
+      saveContact(jid, jidLid, mediaType)
+    }
+  }
+
+
 
   let file
   if (media) {
@@ -29,7 +45,7 @@ const prepareMessageData = async (message, wbot) => {
   return {
     messageid: message.key.id,
     fromMe: message.key.fromMe,
-    remoteJid: message.key.remoteJid.split('@')[0],
+    remoteJid: isLid ? jid : jidLid,
     unreadMessages,
     timestamp:
       message?.messageTimestamp?.low || message?.messageTimestamp?.high,
