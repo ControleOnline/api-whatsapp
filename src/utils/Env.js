@@ -45,6 +45,8 @@ const envSchema = z.object({
   API_KEY: z.string().min(10, 'Chave muito pequena'),
   WEBHOOK: z.string().min(10, 'Verifique o endereço do Webhook Padrão'),
   WA_VERSION: ValidaWaVersion,
+  WHISPER_PORT: z.string().optional(),
+  WHISPER_MODEL: z.string().optional(),
 })
 
 module.exports = envSchema.parse(process.env)

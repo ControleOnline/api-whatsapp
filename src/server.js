@@ -6,6 +6,7 @@ const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
 const env = require('./utils/Env.js')
+const {startWhisperServer, stopWhisperServer} = require('./lib/helpers/whisperServer.js')
 
 // --- Global Error Handling ---
 process.on('uncaughtException', (err) => {
@@ -54,6 +55,7 @@ const server = app.listen(port, () => {
   logger.info(`Servidor iniciado na porta ${port}`)
   // Inicia a restauração de sessões APÓS o servidor estar ouvindo
   restoreSessions()
+  startWhisperServer()
 })
 
 // --- Async Session Restoration ---
@@ -102,12 +104,14 @@ function gracefulShutdown(signal) {
 
   server.close(() => {
     logger.info('Servidor HTTP fechado.')
+    stopWhisperServer()
     process.exit(0)
   })
 
   // Forçar encerramento se passar do tempo limite (ex: 10s)
   setTimeout(() => {
     logger.error('Não foi possível fechar as conexões a tempo, forçando encerramento.')
+    stopWhisperServer()
     process.exit(1)
   }, 10000)
 }

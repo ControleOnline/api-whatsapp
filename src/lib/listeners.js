@@ -81,6 +81,7 @@ const baileysMessageListeners = (wbot, phone) => {
             action: 'receiveMessage',
             origin: messageData.remoteJid,
             destination: String(wbot.phone),
+            txttranscribe: messageData.content.txttranscribe || '',
             message: JSON.stringify(messageData.content.body),
             file: JSON.stringify(messageData.content.file),
           })
