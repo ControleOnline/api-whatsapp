@@ -30,12 +30,12 @@ const prepareMediaMessageContent = async ({ media, body }) => {
 
   if (isImage(mimetype)) {
     mediaRequest = {
-      message: body,
+      caption: body,
       image: media.data,
     }
   } else if (isVideo(mimetype)) {
     mediaRequest = {
-      message: body,
+      caption: body,
       video: media.data,
     }
   } else if (isAudio(mimetype)) {
@@ -45,7 +45,7 @@ const prepareMediaMessageContent = async ({ media, body }) => {
     if (audioRecordingFromMe) {
       const convert = await processAudio(pathAudio)
       mediaRequest = {
-        message: body,
+        caption: body,
         audio: readFileSync(convert),
         mimetype: 'audio/mp4',
         ptt: true,
@@ -53,14 +53,14 @@ const prepareMediaMessageContent = async ({ media, body }) => {
       unlinkSync(convert)
     } else {
       mediaRequest = {
-        message: body,
+        caption: body,
         audio: media.data,
         mimetype,
       }
     }
   } else {
     mediaRequest = {
-      message: body,
+      caption: body,
       document: media.data,
       mimetype,
       fileName: media.name,

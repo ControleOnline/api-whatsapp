@@ -4,45 +4,27 @@ const {
 const sendMessage = require('../lib/helpers/sendMessage.js')
 const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
-const sendText = async (req, res) => {
+const sendTextMedia = async (req, res) => {
   const { phone } = req.params
-  const { number, message } = req.body
-
-  try {
-    const sentMessage = await sendMessage({
-      phone,
-      number,
-      content: { text: message },
-    })
-
-    if (sentMessage) {
-      res.status(200).json({ message: 'Enviada com sucesso' })
-    }
-  } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de texto: ' + error?.message })
-  }
-}
-
-const sendMedia = async (req, res) => {
-  const { phone } = req.params
-  const { number, message } = req.body
+  const { number, message = '' } = req.body
   const media = req.files
 
-  if (!media) {
-    res.status(400).json({ message: 'Arquivo não encontrado' })
-    return
-  }
+  let content
 
   try {
-    const mediaRequest = await prepareMediaMessageContent({
-      media: media.file,
-      body: message,
-    })
+    if (media) {
+      content = await prepareMediaMessageContent({
+        media: media.file,
+        body: message,
+      })
+    } else {
+      content = { text: message }
+    }
 
     const sentMessage = await sendMessage({
       phone,
       number,
-      content: mediaRequest,
+      content,
     })
 
     if (sentMessage)
@@ -65,4 +47,4 @@ const unreadMessages = async (req, res) => {
   }
 }
 
-module.exports = { sendText, sendMedia, unreadMessages }
+module.exports = { sendTextMedia, unreadMessages }
