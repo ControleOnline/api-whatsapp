@@ -1,10 +1,14 @@
+const NodeCache = require( "node-cache");
 const {
   default: makeWASocket,
   DisconnectReason,
   fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
   useMultiFileAuthState,
-} = require('@whiskeysockets/baileys')
+  isJidBroadcast,
+  isJidNewsletter,
+  isJidGroup
+} = require('baileys')
 const P = require('pino')
 const { format } = require('date-fns')
 const fs = require('fs')
@@ -17,6 +21,10 @@ const loggerBaileys = P({
   timestamp: () => `,"time":"${new Date().toJSON()}"`,
   level: 'fatal',
 })
+
+const store = {
+  messages: new NodeCache({ stdTTL: 20, checkperiod: 30 }),
+};
 
 const sessions = []
 const retriesQrCodeMap = new Map()
@@ -33,18 +41,6 @@ const getWbot = (phone) => {
 const removeWbot = async (phone) => {
   const sessionIndex = sessions.findIndex((s) => s.phone === phone)
   if (sessionIndex !== -1) {
-    try {
-      if (env.STORE) {
-        if (sessions[sessionIndex].interval)
-          clearInterval(sessions[sessionIndex].interval)
-        fs.rmSync(`store/${phone}.json`, {
-          force: true,
-        })
-      }
-    } catch (error) {
-      logger.error(error)
-    }
-
     try {
       await sessions[sessionIndex].logout()
     } catch (error) {
@@ -121,12 +117,6 @@ const initBaileysSocket = async (phone) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      const store = {
-        bind: () => {},
-        writeToFile: () => {},
-        readFromFile: () => {},
-      }
-
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
       const sessionPath = `data/${phone}`
       const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
@@ -140,6 +130,8 @@ const initBaileysSocket = async (phone) => {
         browser: ['ApiBaileys', '', ''],
         // Evitar a msg de "Time Out", para não reiniciar o backend
         defaultQueryTimeoutMs: 0,
+        // Ignora as mensagens de status do contato ou newsletter ou grupos
+        shouldIgnoreJid: jid => isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
         auth: {
           creds: state.creds,
           keys: makeCacheableSignalKeyStore(
@@ -154,29 +146,16 @@ const initBaileysSocket = async (phone) => {
         version,
         syncFullHistory: true,
         getMessage: async (key) => {
-          const { store } = getWbot(phone)
+          logger.info(`Buscando mensagem no cache ${key.id}`);
+          const msg = store.messages.get(key.id);
 
-          if (store) {
-            const msg = await store.loadMessage(key.remoteJid, key.id)
-            return msg?.message || undefined
-          }
-          return {
-            conversation: 'Não foi possivel capturar a mensagem.',
-          }
+          if (!msg) logger.info(`Mensagem ${key.id} não encontrada no cache`);
+
+          return msg;
         },
       })
 
-      sock.store = store
       sock.phone = phone
-
-      if (env.STORE) {
-        if (fs.existsSync(`store/${phone}.json`))
-          sock.store.readFromFile(`store/${phone}.json`)
-        if (sock.interval) clearInterval(sock.interval)
-        sock.interval = setInterval(() => {
-          sock.store.writeToFile(`store/${phone}.json`)
-        }, 10_000)
-      }
 
       sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr, isOnline } = update
@@ -257,7 +236,6 @@ const initBaileysSocket = async (phone) => {
         await saveCreds()
       })
 
-      store.bind(sock.ev)
       resolve(sock)
     } catch (error) {
       logger.error(error)
@@ -266,4 +244,4 @@ const initBaileysSocket = async (phone) => {
   })
 }
 
-module.exports = { getWbot, initBaileysSocket, removeWbot }
+module.exports = { getWbot, initBaileysSocket, removeWbot, store }

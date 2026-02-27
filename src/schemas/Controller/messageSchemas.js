@@ -1,11 +1,6 @@
 const { z } = require('zod')
 
-const sendTextSchema = z.object({
-  number: z.string(),
-  message: z.string(),
-})
-
-const file = z.object({
+const fileSchema = z.object({
   name: z.string(),
   data: z.any(),
   mimetype: z.string(),
@@ -13,10 +8,17 @@ const file = z.object({
   size: z.number(),
 })
 
-const sendMediaSchema = z.object({
-  number: z.string({ required_error: 'Obrigatório enviar um número' }),
-  message: z.string().optional(),
-  file: file.or(z.array(file)),
-})
+const sendMessageSchema = z.union([
+  z.object({
+    number: z.string(),
+    message: z.string().min(1),
+    file: fileSchema.optional(),
+  }),
+  z.object({
+    number: z.string(),
+    file: fileSchema,
+    message: z.string().optional(),
+  }),
+])
 
-module.exports = { sendTextSchema, sendMediaSchema }
+module.exports = { sendMessageSchema }

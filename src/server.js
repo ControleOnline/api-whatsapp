@@ -6,6 +6,7 @@ const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
 const env = require('./utils/Env.js')
+const {startWhisperServer, stopWhisperServer} = require('./lib/helpers/whisperServer.js')
 
 // --- Global Error Handling ---
 process.on('uncaughtException', (err) => {
@@ -54,6 +55,7 @@ const server = app.listen(port, () => {
   logger.info(`Servidor iniciado na porta ${port}`)
   // Inicia a restauração de sessões APÓS o servidor estar ouvindo
   restoreSessions()
+  startWhisperServer()
 })
 
 // --- Async Session Restoration ---
@@ -71,7 +73,7 @@ async function restoreSessions() {
     let contador = 0
     // Usar loop for...of para processar sequencialmente e evitar pico de CPU/Memória
     // que poderia matar o processo no Passenger durante a inicialização
-    for (const session of sessions) {
+    for await (const session of sessions) {
       if (session !== '.gitkeep' && session.endsWith('.json')) {
         try {
           const fileContent = fs.readFileSync(`sessions/${session}`, 'utf8')
@@ -79,7 +81,7 @@ async function restoreSessions() {
 
           if (sessionData.phone) {
             logger.info(`Restaurando sessão: ${sessionData.phone}`)
-            // await aqui é crucial para não subir todas as instâncias do Chrome de uma vez
+            // await aqui é crucial para não subir todas as instâncias de uma vez
             await initBaileysSocket(sessionData.phone)
             contador++
             // Pequeno delay opcional para dar respiro à CPU
@@ -99,15 +101,17 @@ async function restoreSessions() {
 // --- Graceful Shutdown ---
 function gracefulShutdown(signal) {
   logger.info(`${signal} recebido. Fechando servidor HTTP...`)
-  
+
   server.close(() => {
     logger.info('Servidor HTTP fechado.')
+    stopWhisperServer()
     process.exit(0)
   })
 
   // Forçar encerramento se passar do tempo limite (ex: 10s)
   setTimeout(() => {
     logger.error('Não foi possível fechar as conexões a tempo, forçando encerramento.')
+    stopWhisperServer()
     process.exit(1)
   }, 10000)
 }
