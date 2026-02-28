@@ -18,7 +18,7 @@ const readMessages = async (req, res) => {
 
       res.status(200).json({ message: 'Mensagens lidas com sucesso' })
     } else {
-      res.status(400).json({ message: 'remoteJid invalido' })
+      res.status(404).json({ message: 'remoteJid invalido' })
     }
   } catch (error) {
     logger.error(error)

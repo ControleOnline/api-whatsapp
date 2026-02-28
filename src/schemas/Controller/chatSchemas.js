@@ -1,4 +1,4 @@
-const { z } = require('zod')
+const { z } = require('../../lib/zod.js')
 
 const readMessagesSchema = z.array(
   z.object({
@@ -7,4 +7,4 @@ const readMessagesSchema = z.array(
   }),
 )
 
-module.exports = readMessagesSchema
+module.exports = {readMessagesSchema}

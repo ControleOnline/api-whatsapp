@@ -1,4 +1,4 @@
-const { z } = require('zod')
+const { z } = require('../../lib/zod.js')
 
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024 // 10MB
 

@@ -38,11 +38,10 @@ const store = async (req, res) => {
   try {
     const wbot = getWbot(phone);
     if (wbot) {
-      res.status(200).json({
+      return res.status(200).json({
         status: state[wbot.user ? 2 : 1],
         qr: wbot.qr,
       });
-      return;
     }
   } catch (error) {
     logger.error(error);
@@ -55,7 +54,7 @@ const store = async (req, res) => {
 
   const session = await initBaileysSocket(phone);
   await sleep(1);
-  res.status(200).json({
+  return res.status(201).json({
     message: "Sessão criada com sucesso",
     qr: session.qr,
   });

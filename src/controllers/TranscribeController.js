@@ -5,13 +5,13 @@ const {WHISPER_PORT, WHISPER_MODEL} = require("../utils/Env.js")
 const transcribe = async (req, res) => {
     try {
         if (!req.files || !req.files.audio) {
-            return res.status(400).json({
+            return res.status(404).json({
                 message: 'Nenhum arquivo de áudio enviado.'
             })
         }
 
         if (!WHISPER_PORT || !WHISPER_MODEL) {
-            return res.status(400).json({
+            return res.status(500).json({
                 message: 'Servidor Whisper não iniciado.'
             })
         }
@@ -35,7 +35,7 @@ const transcribe = async (req, res) => {
 
         logger.error(`Erro ao transcrever áudio: ${error.message}`)
 
-        return res.status(400).json({
+        return res.status(501).json({
             message: 'Não foi possível transcrever o áudio.',
             error: error.message
         })
