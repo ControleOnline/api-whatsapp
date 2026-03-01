@@ -1,4 +1,4 @@
-const { z } = require('zod')
+const { z } = require('../lib/zod.js')
 const dotenv = require('dotenv')
 
 dotenv.config()
@@ -39,7 +39,7 @@ const ValidaWaVersion = z
   })
 
 const envSchema = z.object({
-  HOST: z.string().ip().default('0.0.0.0'),
+  HOST: z.string().ipv4().default('0.0.0.0'),
   PORT: ValidaNumeros,
   FROMME: z.string().transform((v) => v === '1'),
   API_KEY: z.string().min(10, 'Chave muito pequena'),

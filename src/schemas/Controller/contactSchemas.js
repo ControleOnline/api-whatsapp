@@ -1,4 +1,4 @@
-const { z } = require('zod')
+const { z } = require('../../lib/zod.js')
 
 const checkContactSchema = z.object({
   number: z.string(),

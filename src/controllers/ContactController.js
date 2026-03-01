@@ -52,7 +52,7 @@ const checkContact = async (req, res) => {
       valid: false,
     }
     if (validNumber && validNumber.length > 0) {
-      contact = { number: validNumber[0].jid, valid: true }
+      contact = { number: validNumber[0].jid.split('@')[0], valid: true }
     }
 
     res.status(200).json(contact)
@@ -76,7 +76,7 @@ const getProfilePicture = async (req, res) => {
       const picture = await wbot.profilePictureUrl(validNumber[0].jid, 'image')
       res.status(200).json({ picture })
     } else {
-      res.status(400).json({ message: 'remoteJid invalido' })
+      res.status(404).json({ message: 'remoteJid invalido' })
     }
   } catch (error) {
     logger.error(error)
