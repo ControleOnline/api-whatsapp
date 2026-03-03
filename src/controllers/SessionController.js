@@ -22,7 +22,7 @@ const index = async (_, res) => {
   if (sessions.length > 0) {
     sessions.forEach((session) => {
       if (session !== ".gitkeep") {
-        const file = fs.readFileSync(`sessions/${session}`, "utf8");
+        const file = fs.readFileSync(`data/connections/${session}`, "utf8");
         const sessionData = JSON.parse(file);
         sessionsList.push(sessionData);
       }
@@ -48,7 +48,7 @@ const store = async (req, res) => {
   }
 
   fs.writeFileSync(
-    `sessions/${phone}.json`,
+    `data/connections/${phone}.json`,
     JSON.stringify({ phone, webhooks })
   );
 
@@ -74,7 +74,7 @@ const addWebhook = async (req, res) => {
   try {
     const wbot = getWbot(phone);
     if (wbot.phone === undefined) return;
-    const path = `sessions/${wbot.phone}.json`;
+    const path = `data/connections/${wbot.phone}.json`;
     const data = JSON.parse(fs.readFileSync(path, "utf-8"));
     data.webhooks = {
       ...data.webhooks,

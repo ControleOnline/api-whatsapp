@@ -1,13 +1,6 @@
 node_modules
-data/*
-!data/.gitkeep
-sessions/*
-!sessions/.gitkeep
-store/*
-!store/.gitkeep
 .env
 .env.test
-
 package-lock.json
 yarn.lock
 yarn-error.log

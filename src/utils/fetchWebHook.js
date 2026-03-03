@@ -4,7 +4,7 @@ const env = require('../utils/Env.js')
 const fetchWebHook = (wbot) => {
   if (!wbot.webhooks) {
     const sessionData = JSON.parse(
-      readFileSync(`sessions/${wbot.phone}.json`, 'utf8'),
+      readFileSync(`data/connections/${wbot.phone}.json`, 'utf8'),
     )
     wbot.webhooks = sessionData.webhooks || []
   }

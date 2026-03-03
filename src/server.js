@@ -72,7 +72,7 @@ async function restoreSessions() {
     for (const session of sessions) {
       if (session !== '.gitkeep' && session.endsWith('.json')) {
         try {
-          const fileContent = fs.readFileSync(`sessions/${session}`, 'utf8')
+          const fileContent = fs.readFileSync(`data/connections/${session}`, 'utf8')
           const sessionData = JSON.parse(fileContent)
 
           if (sessionData.phone) {

@@ -1,7 +1,7 @@
 const { join } = require('path')
 
 const pathBase = join(__dirname, '..', '..')
-const pathPublic = join(pathBase, 'public')
-const pathTmp = join(pathPublic, 'temp')
+const pathData = join(pathBase, 'data')
+const pathTmp = join(pathData, 'temp')
 
-module.exports = { pathBase, pathPublic, pathTmp }
+module.exports = { pathBase, pathData, pathTmp }

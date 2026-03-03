@@ -73,7 +73,7 @@ const removeWbot = async (phone) => {
   }
 
   try {
-    fs.rmSync(`sessions/${phone}.json`, {
+    fs.rmSync(`data/connections/${phone}.json`, {
       force: true,
     })
   } catch (error) {
