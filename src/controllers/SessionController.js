@@ -21,7 +21,7 @@ const index = async (_, res) => {
 
   if (sessions.length > 0) {
     sessions.forEach((session) => {
-      if (session !== ".gitkeep") {
+      if (session !== ".gitignore") {
         const file = fs.readFileSync(`data/connections/${session}`, "utf8");
         const sessionData = JSON.parse(file);
         sessionsList.push(sessionData);

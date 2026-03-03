@@ -70,7 +70,7 @@ async function restoreSessions() {
     let contador = 0
 
     for (const session of sessions) {
-      if (session !== '.gitkeep' && session.endsWith('.json')) {
+      if (session !== '.gitignore' && session.endsWith('.json')) {
         try {
           const fileContent = fs.readFileSync(`data/connections/${session}`, 'utf8')
           const sessionData = JSON.parse(fileContent)
