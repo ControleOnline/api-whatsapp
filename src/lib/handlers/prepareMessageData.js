@@ -29,11 +29,11 @@ const prepareMessageData = async (message, wbot) => {
     }
 
     let file
-    let txttranscribe
+    let transcribe
     if (media) {
         file = await downloadMedia(wbot, message, media, mediaType)
         if (isAudio(media.mimetype)) {
-            txttranscribe = await transcribeAudioLocal(file, media)
+            transcribe = await transcribeAudioLocal(file, media)
         }
     }
 
@@ -57,7 +57,7 @@ const prepareMessageData = async (message, wbot) => {
         content: {
             mediaType,
             file,
-            txttranscribe,
+            transcribe,
             body: getBodyMessage(message),
             buttonsJson,
             lists: {listsJson, buttonTextList},

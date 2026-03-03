@@ -16,7 +16,7 @@ const messageContentSchema = z.object({
             size: 1024
         }
     }),
-    txttranscribe: z.string().nullable().openapi({
+    transcribe: z.string().nullable().openapi({
         example: 'Texto transcrito do áudio'
     }),
     body: z.string().nullable().openapi({

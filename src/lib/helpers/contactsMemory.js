@@ -2,12 +2,12 @@ const Database = require('better-sqlite3')
 const NodeCache = require('node-cache')
 const { existsSync, mkdirSync } = require('fs')
 const { join } = require('path')
-const {pathBase} = require("../../utils/folderPaths");
+const { pathBase } = require('../../utils/folderPaths')
 
 let dbInstance = null
 
-const CACHE_TTL =  4 * 60 * 60 // 4h em segundos
-const CACHE_CHECK_PERIOD = 1 * 60 * 60 // 1h em segundos
+const CACHE_TTL = 4 * 60 * 60
+const CACHE_CHECK_PERIOD = 1 * 60 * 60
 
 const store = {
     contacts: new NodeCache({
@@ -18,7 +18,7 @@ const store = {
 }
 
 function getDb() {
-    const dbDir = join(pathBase, 'DB')
+    const dbDir = join(pathBase, 'data', 'db')
     const dbPath = join(dbDir, 'contacts.db')
 
     if (!existsSync(dbDir)) {
@@ -32,15 +32,16 @@ function getDb() {
         db.pragma('synchronous = NORMAL')
         db.pragma('busy_timeout = 5000')
 
-        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        jid TEXT NOT NULL UNIQUE,
-                        lid TEXT NOT NULL,
-                        mediatype TEXT NOT NULL,
-                        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                     );
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS contacts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                jid TEXT NOT NULL UNIQUE,
+                lid TEXT NOT NULL,
+                mediatype TEXT NOT NULL,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
 
-                     CREATE INDEX IF NOT EXISTS idx_contacts_jid ON contacts(jid);
+            CREATE INDEX IF NOT EXISTS idx_contacts_jid ON contacts(jid);
         `)
 
         dbInstance = db
@@ -53,10 +54,12 @@ function saveContact(jid, lid, mediatype) {
     if (!jid || !lid || !mediatype) return
 
     const db = getDb()
-    const stmt = db.prepare(`INSERT INTO contacts (jid, lid, mediatype)
-                             VALUES (?, ?, ?)
-                             ON CONFLICT(jid) DO UPDATE SET
-                             lid = excluded.lid
+
+    const stmt = db.prepare(`
+        INSERT INTO contacts (jid, lid, mediatype)
+        VALUES (?, ?, ?)
+        ON CONFLICT(jid) DO UPDATE SET
+        lid = excluded.lid
     `)
 
     stmt.run(jid, lid, mediatype)
@@ -75,7 +78,6 @@ function getLidByJid(jid) {
     const db = getDb()
 
     const stmt = db.prepare(`SELECT lid FROM contacts WHERE jid = ?`)
-
     const row = stmt.get(jid)
 
     if (row) {

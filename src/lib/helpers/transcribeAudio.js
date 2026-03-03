@@ -24,7 +24,7 @@ const convertToWav16k = async (inputPath) => {
 }
 
 const transcribeAudioLocal = async (file, media) => {
-    let txttranscribe = ''
+    let transcribe = ''
 
     const pathFile = join(pathTmp, Date.now().toString() + "." + media.mimetype.split('/')[1].split(';')[0])
     let audioConvert = ''
@@ -38,7 +38,7 @@ const transcribeAudioLocal = async (file, media) => {
 
             const buffer = readFileSync(audioConvert)
 
-            txttranscribe = await transcribeAudio({
+            transcribe = await transcribeAudio({
                 name: 'audio.wav',
                 data: buffer
             })
@@ -51,7 +51,7 @@ const transcribeAudioLocal = async (file, media) => {
         if (audioConvert && existsSync(audioConvert)) unlinkSync(audioConvert)
     }
 
-    return txttranscribe
+    return transcribe
 }
 
 const transcribeAudio = async (media) => {
