@@ -60,9 +60,9 @@ const server = app.listen(port, '127.0.0.1', async () => {
 
 async function restoreSessions() {
   try {
-    if (!fs.existsSync('sessions')) return
+    if (!fs.existsSync('data/sessions')) return
 
-    const sessions = fs.readdirSync('sessions')
+    const sessions = fs.readdirSync('data/sessions')
     if (!sessions.length) return
 
     logger.info(`Encontradas ${sessions.length} arquivos na pasta sessions.`)
