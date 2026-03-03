@@ -16,7 +16,7 @@ const list = async (req, res) => {
       return;
     }
 
-    const path = `data/${slugfy(wbot.phone)}.json`;
+    const path = `data/sessions/${slugfy(wbot.phone)}.json`;
     const contactsBuffer = readFileSync(path);
     const contactsData = JSON.parse(contactsBuffer.toString());
     const contactsFiltered = contactsData.map((c) => {

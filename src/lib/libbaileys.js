@@ -81,7 +81,7 @@ const removeWbot = async (phone) => {
   }
 
   try {
-    fs.rmSync(`data/${phone}`, {
+    fs.rmSync(`data/sessions/${phone}`, {
       recursive: true,
       force: true,
     })
@@ -90,7 +90,7 @@ const removeWbot = async (phone) => {
   }
 
   try {
-    fs.rmSync(`data/${phone}.json`, {
+    fs.rmSync(`data/sessions/${phone}.json`, {
       force: true,
     })
   } catch (error) {
@@ -118,7 +118,7 @@ const initBaileysSocket = async (phone) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
-      const sessionPath = `data/${phone}`
+      const sessionPath = `data/sessions/${phone}`
       const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
 
       let retriesQrCode = 0
@@ -167,7 +167,7 @@ const initBaileysSocket = async (phone) => {
 
           if (retries && retries > 3) {
             try {
-              const path = `data/${slugfy(phone)}.json`
+              const path = `data/sessions/${slugfy(phone)}.json`
 
               if (fs.existsSync(path)) fs.unlinkSync(path)
             } catch (e) {

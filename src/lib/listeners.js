@@ -117,7 +117,7 @@ const baileysMessageListeners = (wbot, phone) => {
     let contactsJSONExists
     try {
       contactsJSONExists = readFileSync(
-          `data/${slugfy(wbot.phone)}.json`
+          `data/sessions/${slugfy(wbot.phone)}.json`
       );
     } catch (error) {
       contactsJSONExists = null;
@@ -140,13 +140,13 @@ const baileysMessageListeners = (wbot, phone) => {
       }
 
       return writeFileSync(
-          `data/${slugfy(wbot.phone)}.json`,
+          `data/sessions/${slugfy(wbot.phone)}.json`,
           JSON.stringify(convertFileJSON)
       );
     }
 
     return writeFileSync(
-        `data/${slugfy(wbot.phone)}.json`,
+        `data/sessions/${slugfy(wbot.phone)}.json`,
         JSON.stringify(contacts)
     );
   });
