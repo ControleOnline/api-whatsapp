@@ -16,7 +16,7 @@ const state = [
 ];
 
 const index = async (_, res) => {
-  const sessions = fs.readdirSync("sessions");
+  const sessions = fs.readdirSync("data/connections");
   const sessionsList = [];
 
   if (sessions.length > 0) {

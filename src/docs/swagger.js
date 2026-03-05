@@ -12,7 +12,20 @@ const swaggerSpec = generator.generateDocument({
         version: version,
     },
     servers: [
-        { url: `http://localhost:${PORT}` }
+        { url: '/' }
+    ],
+    externalDocs: {
+        description: 'Abrir no Redoc',
+        url: '/?ui=redoc'
+    },
+    tags: [
+        {
+            name: 'Documentation',
+            externalDocs: {
+                description: 'Abrir no Redoc',
+                url: '/?ui=redoc'
+            }
+        }
     ]
 })
 
