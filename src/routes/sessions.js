@@ -5,7 +5,6 @@ const validateData = require('../middleware/validateData.js')
 const SessionSchemas = require('../schemas/Controller/sessionSchemas.js')
 const registry = require('../docs/registry.js')
 const { z } = require('../lib/zod.js')
-const {responseContactSchema} = require("../schemas/docs/responseContactSchemas");
 const {responseMessageSchema} = require("../schemas/docs/responseMessage");
 
 const sessionRoutes = Router()
@@ -14,8 +13,8 @@ sessionRoutes.get('/', isAuth, SessionController.index)
 
 registry.registerPath({
     method: 'get',
-    path: '/session',
-    tags: ['Session'],
+    path: '/sessions',
+    tags: ['Sessions'],
     security: [{ bearerAuth: [] }],
     responses: {
         200: {
@@ -43,8 +42,8 @@ sessionRoutes.post(
 
 registry.registerPath({
     method: "post",
-    path: '/session/start',
-    tags: ['Session'],
+    path: '/sessions/start',
+    tags: ['Sessions'],
     security: [{ bearerAuth: [] }],
     request:{
       body:{
@@ -95,8 +94,8 @@ sessionRoutes.post(
 
 registry.registerPath({
     method: "post",
-    path: '/session/add-webhook',
-    tags: ['Session'],
+    path: '/sessions/add-webhook',
+    tags: ['Sessions'],
     security: [{ bearerAuth: [] }],
     request:{
         body:{
@@ -128,8 +127,8 @@ sessionRoutes.delete(
 
 registry.registerPath({
     method: "delete",
-    path: '/session/remove',
-    tags: ['Session'],
+    path: '/sessions/remove',
+    tags: ['Sessions'],
     security: [{ bearerAuth: [] }],
     request:{
         body:{
