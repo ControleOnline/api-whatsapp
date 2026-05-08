@@ -1,55 +1,57 @@
 # API Baileys - Documentação
 
-Esta é uma API REST que permite interagir com o WhatsApp através da biblioteca Baileys. O recebimento de mensagens do WhatsApp, é retornado para o backend através de webhooks que devem ser configurados previamente no arquivo da sessão (`./sessions/<telefone>.json`).
-Cada listener de mensagens recebida, é necessário informar seu webhook para que a API possa retornar as respostas ao backend. São os listeners:
+Esta é uma API REST para interação com o WhatsApp através da biblioteca Baileys.
+
+O recebimento de mensagens do WhatsApp é enviado ao backend por webhooks configurados previamente no arquivo da sessão (`./sessions/<telefone>.json`). Cada listener precisa ter um webhook informado para que a API consiga encaminhar os eventos recebidos ao backend.
+
+Listeners suportados:
 - `messaging-history.set`
 - `messages.upsert`
 - `messages.update`
 
-O json da sessão deve conter as seguintes informações:
-- `telefone`: Telefone para vinculo da sessão
-- `webhookUrls`: Array de URLs dos webhooks para recebimento de mensagens do backend, contendo as seguintes informações:
-    - `listener`: Nome do listener
-    - `url`: URL do webhook
+O JSON da sessão deve conter as seguintes informações:
+- `telefone`: telefone usado para vincular a sessão.
+- `webhookUrls`: array de webhooks do backend, contendo:
+  - `listener`: nome do listener.
+  - `url`: URL do webhook correspondente.
 
-Obs.: O listener que não tiver um webhook vinculado não sera chamado. 
+Observação: listeners sem webhook configurado não serão chamados.
 
-As conexões com o WhatsApp são feitas através do QR Code, que pode ser obtido através do endpoint `/qrcode/:telefone`, na rota `/sessions`, que irá retornar a URL para ser gerado no frontend do sistema. Os dados da conexão são armazenados na pasta `./data`, separado por pastas de cada conexão.
+As conexões com o WhatsApp são feitas através de QR Code, obtido pelo endpoint `/qrcode/:telefone` dentro da rota `/sessions`. A resposta retorna a URL usada para gerar o QR Code no frontend. Os dados da conexão são armazenados na pasta `./data`, separados por sessão.
 
 ## Configuração
 
 Variáveis de ambiente necessárias:
 
-- HOST: Endereço onde a API irá rodar (padrão: 0.0.0.0)
-- PORT: Porta onde a API irá rodar (padrão: 3300)
-- API_KEY: Chave de autenticação para acessar os endpoints
+- `HOST`: endereço onde a API irá rodar. Padrão: `0.0.0.0`.
+- `PORT`: porta onde a API irá rodar. Padrão: `3300`.
+- `API_KEY`: chave usada para autenticar o acesso aos endpoints.
 
 ## Rotas Disponíveis
 
-#### Sessões (/sessions)
-- GET / - Obtém todas as sessões
-- GET /qrcode/:telefone - Obtém o QR Code para conectar uma sessão
-- POST /start - Inicia uma nova sessão do WhatsApp
-- POST /add-webhook - Adiciona um webhook para uma sessão
-- DELETE /remove - Remove uma sessão
+#### Sessões (`/sessions`)
+- `GET /`: obtém todas as sessões.
+- `GET /qrcode/:telefone`: obtém o QR Code para conectar uma sessão.
+- `POST /start`: inicia uma nova sessão do WhatsApp.
+- `POST /add-webhook`: adiciona um webhook para uma sessão.
+- `DELETE /remove`: remove uma sessão.
 
-#### Contatos (/contacts)
-- GET /:telefone/list - Lista todos os contatos
-- POST /:telefone/check - Verifica se um número é contato válido
-- POST /:telefone/profile-picture - Obtém a foto do perfil de um contato
+#### Contatos (`/contacts`)
+- `GET /:telefone/list`: lista todos os contatos.
+- `POST /:telefone/check`: verifica se um número é um contato válido.
+- `POST /:telefone/profile-picture`: obtém a foto do perfil de um contato.
 
-#### Chats (/chats)
-- POST /:telefone/read - Marca mensagens como lidas
+#### Chats (`/chats`)
+- `POST /:telefone/read`: marca mensagens como lidas.
 
-#### Mensagens (/messages)
-- POST /:telefone/send/text - Envia uma mensagem de texto
-- POST /:telefone/send/media - Envia uma mensagem com mídia (imagem, vídeo, áudio, documento)
+#### Mensagens (`/messages`)
+- `POST /:telefone/send/text`: envia uma mensagem de texto.
+- `POST /:telefone/send/media`: envia uma mensagem com mídia, como imagem, vídeo, áudio ou documento.
 
 ## Autenticação
 
-Todas as rotas requerem autenticação através do middleware isAuth, que valida a API_KEY informada
+Todas as rotas requerem autenticação através do middleware `isAuth`, que valida a `API_KEY` informada.
 
 ## Validação
 
-As requisições são validadas através de schemas específicos para cada rota utilizando o middleware validateData.
-
+As requisições são validadas através de schemas específicos para cada rota usando o middleware `validateData`.
