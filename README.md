@@ -17,7 +17,9 @@ O JSON da sessão deve conter as seguintes informações:
 
 Observação: listeners sem webhook configurado não serão chamados.
 
-As conexões com o WhatsApp são feitas através de QR Code, obtido pelo endpoint `/qrcode/:telefone` dentro da rota `/sessions`. A resposta retorna a URL usada para gerar o QR Code no frontend. Os dados da conexão são armazenados na pasta `./data`, separados por sessão.
+As conexões com o WhatsApp são feitas através de QR Code, obtido pelo endpoint `/qrcode/:telefone` dentro da rota `/sessions`. A resposta retorna a URL usada para gerar o QR Code no frontend.
+
+Por padrão, os dados da conexão continuam sendo armazenados em `./data`, separados por sessão. Agora também é possível armazenar metadados de sessão, snapshots de contatos e credenciais do Baileys em Redis ou Memcache por configuração de ambiente, sem depender das pastas `data/connections` e `data/sessions`.
 
 ## Configuração
 
@@ -26,6 +28,18 @@ Variáveis de ambiente necessárias:
 - `HOST`: endereço onde a API irá rodar. Padrão: `0.0.0.0`.
 - `PORT`: porta onde a API irá rodar. Padrão: `3300`.
 - `API_KEY`: chave usada para autenticar o acesso aos endpoints.
+- `STORAGE_DRIVER`: backend de armazenamento de sessão. Aceita `filesystem`, `redis` ou `memcache`. Padrão: `filesystem`.
+- `STORAGE_PREFIX`: prefixo das chaves remotas quando `redis` ou `memcache` forem usados. Padrão: `api-whatsapp`.
+- `REDIS_URL`: URL de conexão do Redis. Obrigatória quando `STORAGE_DRIVER=redis`.
+- `MEMCACHE_SERVERS`: lista de servidores Memcache. Obrigatória quando `STORAGE_DRIVER=memcache`.
+- `MEMCACHE_USERNAME`: usuário opcional para Memcache autenticado.
+- `MEMCACHE_PASSWORD`: senha opcional para Memcache autenticado.
+
+### Modos de armazenamento
+
+- `filesystem`: mantém o comportamento atual usando `data/connections` e `data/sessions`.
+- `redis`: salva sessões, contatos e credenciais do Baileys em chaves Redis.
+- `memcache`: salva sessões, contatos e credenciais do Baileys em chaves Memcache.
 
 ## Rotas Disponíveis
 
