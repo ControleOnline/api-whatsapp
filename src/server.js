@@ -1,12 +1,12 @@
 const express = require('express')
 const fileUpload = require('express-fileupload')
-const fs = require('fs')
 const { initBaileysSocket } = require('./lib/libbaileys.js')
 const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
 const env = require('./utils/Env.js')
 const { startWhisperServer, stopWhisperServer } = require('./lib/helpers/whisperServer.js')
+const { createSessionStorage } = require('./lib/storage/sessionStorage.js')
 
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`)
@@ -21,6 +21,7 @@ process.setMaxListeners(0)
 require('events').EventEmitter.defaultMaxListeners = 0
 
 const app = express()
+const sessionStorage = createSessionStorage()
 
 app.use(fileUpload({ limits: { fileSize: 100 * 1024 * 1024 } }))
 
@@ -60,29 +61,22 @@ const server = app.listen(port, '127.0.0.1', async () => {
 
 async function restoreSessions() {
   try {
-    if (!fs.existsSync('data/connections')) return
-
-    const sessions = fs.readdirSync('data/connections')
+    const sessions = await sessionStorage.listSessions()
     if (!sessions.length) return
 
-    logger.info(`Encontradas ${sessions.length} arquivos na pasta sessions.`)
+    logger.info(`Encontradas ${sessions.length} sessões para restauração.`)
 
     let contador = 0
 
     for (const session of sessions) {
-      if (session !== '.gitignore' && session.endsWith('.json')) {
+      if (session?.phone) {
         try {
-          const fileContent = fs.readFileSync(`data/connections/${session}`, 'utf8')
-          const sessionData = JSON.parse(fileContent)
-
-          if (sessionData.phone) {
-            logger.info(`Restaurando sessão: ${sessionData.phone}`)
-            await initBaileysSocket(sessionData.phone)
-            contador++
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
+          logger.info(`Restaurando sessão: ${session.phone}`)
+          await initBaileysSocket(session.phone)
+          contador++
+          await new Promise(resolve => setTimeout(resolve, 500))
         } catch (err) {
-          logger.error(`Erro ao restaurar sessão ${session}: ${err.message}`)
+          logger.error(`Erro ao restaurar sessão ${session.phone}: ${err.message}`)
         }
       }
     }

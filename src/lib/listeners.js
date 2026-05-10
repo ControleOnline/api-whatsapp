@@ -4,8 +4,9 @@ const logger = require('../utils/logger.js')
 const prepareMessageData = require('./handlers/prepareMessageData.js')
 const isValidMsg = require('./helpers/isValidMessage.js')
 const env = require('../utils/Env.js')
-const {readFileSync, writeFileSync} = require("fs");
-const slugfy = require('../utils/slugfy.js')
+const { createSessionStorage } = require('./storage/sessionStorage.js')
+
+const sessionStorage = createSessionStorage()
 
 const sendWebhook = async (webhookUrl, data) => {
   try {
@@ -41,7 +42,7 @@ const baileysMessageListeners = (wbot, phone) => {
               conversa &&
               conversa.messages.length < (chat.unreadCount || 0)
             ) {
-              conversas?.find((t) => t.key === chat.id)?.messages.push(message)
+              conversas.find((t) => t.key === chat.id)?.messages.push(message)
             }
           }
         }
@@ -111,45 +112,22 @@ const baileysMessageListeners = (wbot, phone) => {
         })
       }
     }
-  });
+  })
 
-  wbot.ev.on("contacts.upsert", async (contacts) => {
-    let contactsJSONExists
-    try {
-      contactsJSONExists = readFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`
-      );
-    } catch (error) {
-      contactsJSONExists = null;
-    }
+  wbot.ev.on('contacts.upsert', async (contacts) => {
+    const currentContacts = await sessionStorage.getContacts(wbot.phone)
+    const nextContacts = Array.isArray(currentContacts) ? [...currentContacts] : []
 
-    if (contactsJSONExists) {
-      let convertFileJSON = JSON.parse(contactsJSONExists.toString());
-
-      if (
-          contacts &&
-          typeof convertFileJSON === "object" &&
-          convertFileJSON.length > 0
-      ) {
-        for await (const contact of contacts) {
-          convertFileJSON = convertFileJSON.filter(
-              (value) => value.id !== contact.id
-          );
-          convertFileJSON.push(contact);
-        }
+    for await (const contact of contacts) {
+      const index = nextContacts.findIndex((value) => value.id === contact.id)
+      if (index >= 0) {
+        nextContacts.splice(index, 1)
       }
-
-      return writeFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`,
-          JSON.stringify(convertFileJSON)
-      );
+      nextContacts.push(contact)
     }
 
-    return writeFileSync(
-        `data/sessions/${slugfy(wbot.phone)}.json`,
-        JSON.stringify(contacts)
-    );
-  });
+    await sessionStorage.saveContacts(wbot.phone, nextContacts.length ? nextContacts : contacts)
+  })
 }
 
 module.exports = { baileysMessageListeners, sendWebhook }

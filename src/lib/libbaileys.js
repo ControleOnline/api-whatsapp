@@ -1,21 +1,19 @@
-const NodeCache = require( "node-cache");
+const NodeCache = require('node-cache')
 const {
   default: makeWASocket,
   DisconnectReason,
   fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
-  useMultiFileAuthState,
   isJidBroadcast,
   isJidNewsletter,
-  isJidGroup
+  isJidGroup,
 } = require('baileys')
 const P = require('pino')
 const { format } = require('date-fns')
-const fs = require('fs')
 const logger = require('../utils/logger.js')
-const slugfy = require('../utils/slugfy.js')
 const { baileysMessageListeners } = require('./listeners.js')
 const env = require('../utils/Env.js')
+const { createSessionStorage } = require('./storage/sessionStorage.js')
 
 const loggerBaileys = P({
   timestamp: () => `,"time":"${new Date().toJSON()}"`,
@@ -24,10 +22,11 @@ const loggerBaileys = P({
 
 const store = {
   messages: new NodeCache({ stdTTL: 20, checkperiod: 30 }),
-};
+}
 
 const sessions = []
 const retriesQrCodeMap = new Map()
+const sessionStorage = createSessionStorage()
 
 const getWbot = (phone) => {
   const sessionIndex = sessions.findIndex((s) => s.phone === phone)
@@ -73,26 +72,9 @@ const removeWbot = async (phone) => {
   }
 
   try {
-    fs.rmSync(`data/connections/${phone}.json`, {
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
-
-  try {
-    fs.rmSync(`data/sessions/${phone}`, {
-      recursive: true,
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
-
-  try {
-    fs.rmSync(`data/sessions/${phone}.json`, {
-      force: true,
-    })
+    await sessionStorage.deleteSession(phone)
+    await sessionStorage.deleteContacts(phone)
+    await sessionStorage.deleteAuthState(phone)
   } catch (error) {
     logger.error(error)
   }
@@ -114,12 +96,9 @@ const initBaileysSocket = async (phone) => {
   }
 
   console.log('Iniciando Baileys phone:', phone, 'Versão:', version)
-  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
-      // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
-      const sessionPath = `data/sessions/${phone}`
-      const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
+      const { state, saveCreds } = await sessionStorage.createAuthState(phone)
 
       let retriesQrCode = 0
       const sock = makeWASocket({
@@ -128,10 +107,9 @@ const initBaileysSocket = async (phone) => {
         generateHighQualityLinkPreview: true,
         receivedPendingNotifications: true,
         browser: ['ApiBaileys', '', ''],
-        // Evitar a msg de "Time Out", para não reiniciar o backend
         defaultQueryTimeoutMs: 0,
-        // Ignora as mensagens de status do contato ou newsletter ou grupos
-        shouldIgnoreJid: jid => isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
+        shouldIgnoreJid: (jid) =>
+          isJidBroadcast(jid) || isJidNewsletter(jid) || isJidGroup(jid),
         auth: {
           creds: state.creds,
           keys: makeCacheableSignalKeyStore(
@@ -146,12 +124,12 @@ const initBaileysSocket = async (phone) => {
         version,
         syncFullHistory: true,
         getMessage: async (key) => {
-          logger.info(`Buscando mensagem no cache ${key.id}`);
-          const msg = store.messages.get(key.id);
+          logger.info(`Buscando mensagem no cache ${key.id}`)
+          const msg = store.messages.get(key.id)
 
-          if (!msg) logger.info(`Mensagem ${key.id} não encontrada no cache`);
+          if (!msg) logger.info(`Mensagem ${key.id} não encontrada no cache`)
 
-          return msg;
+          return msg
         },
       })
 
@@ -166,15 +144,7 @@ const initBaileysSocket = async (phone) => {
           const retries = retriesQrCodeMap.get(phone) || 0
 
           if (retries && retries > 3) {
-            try {
-              const path = `data/sessions/${slugfy(phone)}.json`
-
-              if (fs.existsSync(path)) fs.unlinkSync(path)
-            } catch (e) {
-              logger.error('Erro ao excluir a sessão', e)
-            }
-
-            await sock.ws.close()
+            await removeWbot(phone)
             retriesQrCodeMap.delete(phone)
             return
           }
@@ -223,7 +193,6 @@ const initBaileysSocket = async (phone) => {
             }
           }
 
-          // reconnect if not logged out
           if (shouldReconnect) {
             setTimeout(() => initBaileysSocket(phone), 2000)
           }
@@ -231,7 +200,6 @@ const initBaileysSocket = async (phone) => {
       })
 
       baileysMessageListeners(sock, phone)
-      // credentials updated -- save them
       sock.ev.on('creds.update', async () => {
         await saveCreds()
       })
