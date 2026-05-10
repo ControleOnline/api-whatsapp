@@ -41,6 +41,15 @@ Variáveis de ambiente necessárias:
 - `redis`: salva sessões, contatos e credenciais do Baileys em chaves Redis.
 - `memcache`: salva sessões, contatos e credenciais do Baileys em chaves Memcache.
 
+### Operação segura para Redis e Memcache
+
+- Use Redis ou Memcache apenas em rede privada ou controlada. Nao exponha esses backends diretamente na internet.
+- Mantenha autenticacao habilitada quando o provedor suportar isso e use um `STORAGE_PREFIX` exclusivo por ambiente para evitar colisao entre homologacao, producao e testes.
+- Sessao, snapshots de contatos e auth state do Baileys devem ser tratados como dados sensiveis. Evite compartilhar dumps, logs ou acessos amplos a essas chaves.
+- Trocar `STORAGE_DRIVER`, `STORAGE_PREFIX` ou o backend remoto nao migra credenciais automaticamente. Antes de mudar a configuracao, copie ou preserve as chaves antigas e registre um plano de rollback.
+- A restauracao automatica no boot depende do mesmo backend e das mesmas chaves estarem acessiveis. Se Redis ou Memcache estiver vazio, indisponivel ou com prefixo diferente, a API pode nao restaurar a sessao e exigir novo QR Code.
+- Memcache pode perder dados mais facilmente do que Redis em reinicios ou evicoes. Considere esse risco antes de usar Memcache para auth state persistente.
+
 ## Rotas Disponíveis
 
 #### Sessões (`/sessions`)
