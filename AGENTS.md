@@ -20,6 +20,9 @@
 - O endpoint `/health` deve continuar barato e livre de dependencia de sessao ativa.
 - Logs precisam ajudar a operar a API sem vazar segredo, token, API key ou payload sensivel de clientes.
 - Se uma mudanca alterar armazenamento local em `data/` ou `sessions/`, registrar claramente migracao, fallback e impacto em restauracao automatica.
+- Quando `STORAGE_DRIVER` for `redis` ou `memcache`, trate sessao, snapshots de contatos e auth state do Baileys como dado sensivel: use backend acessivel apenas por rede privada ou controlada, com autenticacao ativa quando o provedor suportar isso, sem exposicao publica direta e com prefixo dedicado por ambiente.
+- Troca de `STORAGE_DRIVER`, `STORAGE_PREFIX` ou de backend remoto nao migra credenciais automaticamente. Toda mudanca desse tipo precisa registrar estrategia de migracao, fallback e impacto na restauracao automatica antes de ir para revisao final.
+- Restauracao automatica no boot depende do mesmo backend e das mesmas chaves continuarem acessiveis. Se Redis/Memcache estiver indisponivel ou vazio, a sessao pode nao ser restaurada e exigir novo pareamento por QR Code.
 
 ## Testes e evidencias
 - Quando nao houver teste automatizado viavel, publicar pelo menos evidencia tecnica objetiva da validacao do fluxo afetado.
