@@ -35,5 +35,8 @@ jobs:
       - name: Check JavaScript syntax
         run: find src -name '*.js' -print0 | xargs -0 -n1 node --check
 
+      - name: Run storage adapter regression test
+        run: npm run test:storage
+
       - name: Check diff hygiene
         run: git diff --check
