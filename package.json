@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch ./src/server.js",
     "start": "node ./src/server.js",
-    "lint": "eslint --ext .js src --fix"
+    "lint": "eslint --ext .js src --fix",
+    "test:storage": "node --test src/tests/storage/sessionStorage.test.js"
   },
   "keywords": [],
   "author": "",
