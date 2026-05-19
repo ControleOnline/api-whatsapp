@@ -26,6 +26,36 @@ Variáveis de ambiente necessárias:
 - `HOST`: endereço onde a API irá rodar. Padrão: `0.0.0.0`.
 - `PORT`: porta onde a API irá rodar. Padrão: `3300`.
 - `API_KEY`: chave usada para autenticar o acesso aos endpoints.
+- `MESSAGE_ENGINES`: engines de envio com pesos, separadas por vírgula. Exemplo: `baileys=70,meta=20,webjs=10`.
+- `MESSAGE_ENGINE_STRATEGY`: estratégia de balanceamento. Valor atual suportado: `weighted-random`.
+
+Configurações opcionais por engine:
+
+- `WEBJS_API_URL`: URL base da API remota compatível com `whatsapp-web.js`.
+- `WEBJS_API_KEY`: chave da API remota de `webjs`. Se omitida, a API reutiliza `API_KEY`.
+- `META_API_VERSION`: versão da Graph API. Padrão: `v22.0`.
+- `META_PHONE_NUMBER_ID`: identificador do número configurado no WhatsApp Cloud API.
+- `META_ACCESS_TOKEN`: token bearer da API oficial.
+- `META_MARK_AS_READ`: mantém compatibilidade com fluxos que precisam marcar leitura no provedor oficial. Padrão: `true`.
+
+## Engines de envio
+
+O endpoint de envio agora pode distribuir mensagens entre múltiplas engines por configuração em `.env`.
+
+Engines suportadas:
+- `baileys`: envio local pela sessão já mantida por esta API.
+- `webjs`: envio remoto para outra API compatível com `whatsapp-web.js`.
+- `meta`: envio direto para a API oficial do WhatsApp Cloud.
+
+Exemplos:
+- `MESSAGE_ENGINES=baileys=100`
+- `MESSAGE_ENGINES=meta=100`
+- `MESSAGE_ENGINES=baileys=90,webjs=10`
+
+Observações operacionais:
+- a engine `baileys` continua dependendo das sessões restauradas em `data/connections` e `data/sessions`;
+- a engine `webjs` encaminha a mesma chamada `POST /messages/:phone` para um serviço remoto configurado em `WEBJS_API_URL`;
+- a engine `meta` aceita texto puro imediatamente e mídia por URL pública (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`), conforme as exigências da API oficial.
 
 ## Rotas Disponíveis
 
@@ -45,8 +75,8 @@ Variáveis de ambiente necessárias:
 - `POST /:telefone/read`: marca mensagens como lidas.
 
 #### Mensagens (`/messages`)
-- `POST /:telefone/send/text`: envia uma mensagem de texto.
-- `POST /:telefone/send/media`: envia uma mensagem com mídia, como imagem, vídeo, áudio ou documento.
+- `POST /:telefone`: envia uma mensagem usando a engine sorteada para a requisição.
+- `GET /:telefone/unread`: lista mensagens não lidas.
 
 ## Autenticação
 
