@@ -11,6 +11,20 @@ const ValidaNumeros = z.string().refine(
   { message: 'Numero Invalido' },
 )
 
+const ValidaNumeroOpcional = z
+  .string()
+  .optional()
+  .default('5')
+  .transform((v) => {
+    const numero = Number(v)
+
+    if (isNaN(numero) || v?.length === 0) {
+      throw new Error('Numero Invalido')
+    }
+
+    return numero
+  })
+
 const ValidaWaVersion = z
   .string()
   .optional()
@@ -57,11 +71,7 @@ const envSchema = z.object({
   RABBITMQ_URL: z.string().optional(),
   RABBITMQ_WEBHOOK_QUEUE: z.string().optional().default('whatsapp.webhooks'),
   RABBITMQ_OUTBOUND_QUEUE: z.string().optional().default('whatsapp.outbound'),
-  RABBITMQ_PREFETCH: z
-    .string()
-    .optional()
-    .default('5')
-    .transform((v) => Number(v)),
+  RABBITMQ_PREFETCH: ValidaNumeroOpcional,
 })
 
 const env = envSchema.parse(process.env)
