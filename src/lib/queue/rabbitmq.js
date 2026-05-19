@@ -1,0 +1,195 @@
+const amqp = require('amqplib')
+const axios = require('axios')
+const logger = require('../../utils/logger.js')
+const env = require('../../utils/Env.js')
+const sendMessage = require('../helpers/sendMessage.js')
+
+let connection = null
+let channel = null
+let initializingPromise = null
+let consumersStarted = false
+let shuttingDown = false
+
+const isRabbitMQEnabled = () => env.RABBITMQ_ENABLED && !!env.RABBITMQ_URL
+
+const assertQueues = async (targetChannel) => {
+  await targetChannel.assertQueue(env.RABBITMQ_WEBHOOK_QUEUE, { durable: true })
+  await targetChannel.assertQueue(env.RABBITMQ_OUTBOUND_QUEUE, { durable: true })
+}
+
+const resetState = () => {
+  channel = null
+  connection = null
+  consumersStarted = false
+}
+
+const deliverWebhook = async ({ webhookUrl, data }) => {
+  await axios.post(webhookUrl, data, {
+    headers: {
+      'api-token': env.API_KEY,
+    },
+  })
+}
+
+const deliverOutboundMessage = async ({ phone, number, content }) => {
+  await sendMessage({ phone, number, content })
+  return true
+}
+
+const startConsumers = async (targetChannel) => {
+  if (consumersStarted) return
+
+  await targetChannel.prefetch(env.RABBITMQ_PREFETCH)
+
+  await targetChannel.consume(
+    env.RABBITMQ_WEBHOOK_QUEUE,
+    async (message) => {
+      if (!message) return
+
+      try {
+        const payload = JSON.parse(message.content.toString())
+        await deliverWebhook(payload)
+        targetChannel.ack(message)
+      } catch (error) {
+        logger.error(
+          `Erro ao processar webhook da fila ${env.RABBITMQ_WEBHOOK_QUEUE}: ${error.message}`,
+        )
+        targetChannel.nack(message, false, false)
+      }
+    },
+    { noAck: false },
+  )
+
+  await targetChannel.consume(
+    env.RABBITMQ_OUTBOUND_QUEUE,
+    async (message) => {
+      if (!message) return
+
+      try {
+        const payload = JSON.parse(message.content.toString())
+        await deliverOutboundMessage(payload)
+        targetChannel.ack(message)
+      } catch (error) {
+        logger.error(
+          `Erro ao processar envio da fila ${env.RABBITMQ_OUTBOUND_QUEUE}: ${error.message}`,
+        )
+        targetChannel.nack(message, false, false)
+      }
+    },
+    { noAck: false },
+  )
+
+  consumersStarted = true
+}
+
+const initRabbitMQ = async () => {
+  if (!isRabbitMQEnabled()) return null
+  if (channel) return channel
+  if (initializingPromise) return initializingPromise
+
+  initializingPromise = (async () => {
+    try {
+      const nextConnection = await amqp.connect(env.RABBITMQ_URL)
+      const nextChannel = await nextConnection.createChannel()
+
+      nextConnection.on('error', (error) => {
+        logger.error(`Erro de conexao com RabbitMQ: ${error.message}`)
+      })
+
+      nextConnection.on('close', () => {
+        resetState()
+
+        if (!shuttingDown) {
+          logger.warn(
+            'Conexao RabbitMQ encerrada. A API continuara com fallback para envio direto.',
+          )
+        }
+      })
+
+      await assertQueues(nextChannel)
+      await startConsumers(nextChannel)
+
+      connection = nextConnection
+      channel = nextChannel
+
+      logger.info('RabbitMQ conectado. Filas de webhooks e mensagens habilitadas.')
+
+      return channel
+    } catch (error) {
+      resetState()
+      logger.error(`Nao foi possivel conectar ao RabbitMQ: ${error.message}`)
+      return null
+    } finally {
+      initializingPromise = null
+    }
+  })()
+
+  return initializingPromise
+}
+
+const publishJob = async ({ queueName, payload, fallback, description }) => {
+  if (!isRabbitMQEnabled()) {
+    return fallback(payload)
+  }
+
+  try {
+    const targetChannel = await initRabbitMQ()
+
+    if (!targetChannel) {
+      logger.warn(`RabbitMQ indisponivel. ${description} sera processado diretamente.`)
+      return fallback(payload)
+    }
+
+    targetChannel.sendToQueue(queueName, Buffer.from(JSON.stringify(payload)), {
+      persistent: true,
+    })
+
+    return true
+  } catch (error) {
+    logger.error(
+      `Erro ao publicar ${description} na fila ${queueName}: ${error.message}`,
+    )
+    return fallback(payload)
+  }
+}
+
+const enqueueWebhookDelivery = async ({ webhookUrl, data }) => {
+  return publishJob({
+    queueName: env.RABBITMQ_WEBHOOK_QUEUE,
+    payload: { webhookUrl, data },
+    fallback: deliverWebhook,
+    description: 'o webhook',
+  })
+}
+
+const enqueueOutboundMessage = async ({ phone, number, content }) => {
+  return publishJob({
+    queueName: env.RABBITMQ_OUTBOUND_QUEUE,
+    payload: { phone, number, content },
+    fallback: deliverOutboundMessage,
+    description: 'o envio de mensagem',
+  })
+}
+
+const closeRabbitMQ = async () => {
+  if (!connection) return
+
+  shuttingDown = true
+
+  try {
+    await connection.close()
+  } catch (error) {
+    logger.error(`Erro ao encerrar conexao RabbitMQ: ${error.message}`)
+  } finally {
+    resetState()
+    shuttingDown = false
+  }
+}
+
+module.exports = {
+  closeRabbitMQ,
+  enqueueOutboundMessage,
+  enqueueWebhookDelivery,
+  initRabbitMQ,
+  isRabbitMQEnabled,
+}
