@@ -5,6 +5,7 @@ const env = require('../../utils/Env.js')
 const sendMessage = require('../helpers/sendMessage.js')
 
 const RECONNECT_DELAY_MS = 5000
+const BUFFER_MARKER = '__queueBuffer'
 
 let connection = null
 let channel = null
@@ -14,6 +15,54 @@ let shuttingDown = false
 let reconnectTimeout = null
 
 const isRabbitMQEnabled = () => env.RABBITMQ_ENABLED && !!env.RABBITMQ_URL
+
+const isPlainObject = (value) =>
+  Object.prototype.toString.call(value) === '[object Object]'
+
+const serializePayloadForQueue = (value) => {
+  if (Buffer.isBuffer(value)) {
+    return { [BUFFER_MARKER]: value.toString('base64') }
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(serializePayloadForQueue)
+  }
+
+  if (isPlainObject(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        serializePayloadForQueue(nestedValue),
+      ]),
+    )
+  }
+
+  return value
+}
+
+const deserializePayloadFromQueue = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(deserializePayloadFromQueue)
+  }
+
+  if (isPlainObject(value)) {
+    if (
+      Object.keys(value).length === 1 &&
+      typeof value[BUFFER_MARKER] === 'string'
+    ) {
+      return Buffer.from(value[BUFFER_MARKER], 'base64')
+    }
+
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [
+        key,
+        deserializePayloadFromQueue(nestedValue),
+      ]),
+    )
+  }
+
+  return value
+}
 
 const assertQueues = async (targetChannel) => {
   await targetChannel.assertQueue(env.RABBITMQ_WEBHOOK_QUEUE, { durable: true })
@@ -70,7 +119,9 @@ const startConsumers = async (targetChannel) => {
       if (!message) return
 
       try {
-        const payload = JSON.parse(message.content.toString())
+        const payload = deserializePayloadFromQueue(
+          JSON.parse(message.content.toString()),
+        )
         await deliverWebhook(payload)
         targetChannel.ack(message)
       } catch (error) {
@@ -89,7 +140,9 @@ const startConsumers = async (targetChannel) => {
       if (!message) return
 
       try {
-        const payload = JSON.parse(message.content.toString())
+        const payload = deserializePayloadFromQueue(
+          JSON.parse(message.content.toString()),
+        )
         await deliverOutboundMessage(payload)
         targetChannel.ack(message)
       } catch (error) {
@@ -166,9 +219,13 @@ const publishJob = async ({ queueName, payload, fallback, description }) => {
       return fallback(payload)
     }
 
-    targetChannel.sendToQueue(queueName, Buffer.from(JSON.stringify(payload)), {
-      persistent: true,
-    })
+    targetChannel.sendToQueue(
+      queueName,
+      Buffer.from(JSON.stringify(serializePayloadForQueue(payload))),
+      {
+        persistent: true,
+      },
+    )
 
     return true
   } catch (error) {
@@ -219,8 +276,10 @@ const closeRabbitMQ = async () => {
 
 module.exports = {
   closeRabbitMQ,
+  deserializePayloadFromQueue,
   enqueueOutboundMessage,
   enqueueWebhookDelivery,
   initRabbitMQ,
   isRabbitMQEnabled,
+  serializePayloadForQueue,
 }
