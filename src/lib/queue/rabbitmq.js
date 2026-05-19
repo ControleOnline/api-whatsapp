@@ -4,17 +4,40 @@ const logger = require('../../utils/logger.js')
 const env = require('../../utils/Env.js')
 const sendMessage = require('../helpers/sendMessage.js')
 
+const RECONNECT_DELAY_MS = 5000
+
 let connection = null
 let channel = null
 let initializingPromise = null
 let consumersStarted = false
 let shuttingDown = false
+let reconnectTimeout = null
 
 const isRabbitMQEnabled = () => env.RABBITMQ_ENABLED && !!env.RABBITMQ_URL
 
 const assertQueues = async (targetChannel) => {
   await targetChannel.assertQueue(env.RABBITMQ_WEBHOOK_QUEUE, { durable: true })
   await targetChannel.assertQueue(env.RABBITMQ_OUTBOUND_QUEUE, { durable: true })
+}
+
+const clearReconnectTimeout = () => {
+  if (!reconnectTimeout) return
+
+  clearTimeout(reconnectTimeout)
+  reconnectTimeout = null
+}
+
+const scheduleReconnect = () => {
+  if (!isRabbitMQEnabled() || shuttingDown || reconnectTimeout) return
+
+  reconnectTimeout = setTimeout(() => {
+    reconnectTimeout = null
+    void initRabbitMQ()
+  }, RECONNECT_DELAY_MS)
+
+  logger.warn(
+    `Nova tentativa de conexao com RabbitMQ agendada para ${RECONNECT_DELAY_MS / 1000}s.`,
+  )
 }
 
 const resetState = () => {
@@ -82,7 +105,7 @@ const startConsumers = async (targetChannel) => {
   consumersStarted = true
 }
 
-const initRabbitMQ = async () => {
+async function initRabbitMQ() {
   if (!isRabbitMQEnabled()) return null
   if (channel) return channel
   if (initializingPromise) return initializingPromise
@@ -101,14 +124,16 @@ const initRabbitMQ = async () => {
 
         if (!shuttingDown) {
           logger.warn(
-            'Conexao RabbitMQ encerrada. A API continuara com fallback para envio direto.',
+            'Conexao RabbitMQ encerrada. A API continuara com fallback para envio direto ate religar o broker.',
           )
+          scheduleReconnect()
         }
       })
 
       await assertQueues(nextChannel)
       await startConsumers(nextChannel)
 
+      clearReconnectTimeout()
       connection = nextConnection
       channel = nextChannel
 
@@ -118,6 +143,7 @@ const initRabbitMQ = async () => {
     } catch (error) {
       resetState()
       logger.error(`Nao foi possivel conectar ao RabbitMQ: ${error.message}`)
+      scheduleReconnect()
       return null
     } finally {
       initializingPromise = null
@@ -175,6 +201,7 @@ const closeRabbitMQ = async () => {
   if (!connection) return
 
   shuttingDown = true
+  clearReconnectTimeout()
 
   try {
     await connection.close()
