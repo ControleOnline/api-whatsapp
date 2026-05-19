@@ -198,10 +198,14 @@ const enqueueOutboundMessage = async ({ phone, number, content }) => {
 }
 
 const closeRabbitMQ = async () => {
-  if (!connection) return
-
   shuttingDown = true
   clearReconnectTimeout()
+
+  if (!connection) {
+    resetState()
+    shuttingDown = false
+    return
+  }
 
   try {
     await connection.close()
