@@ -30,7 +30,7 @@ const sendTextMedia = async (req, res) => {
     if (sentMessage)
       res.status(200).json({ message: 'Mensagem enviada com sucesso' })
   } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de midia' })
+    res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
   }
 }
 
