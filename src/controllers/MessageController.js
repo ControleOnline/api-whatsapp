@@ -1,7 +1,7 @@
 const {
   prepareMediaMessageContent,
 } = require('../lib/helpers/prepareMediaMessageContent.js')
-const sendMessage = require('../lib/helpers/sendMessage.js')
+const { enqueueOutboundMessage } = require('../lib/queue/rabbitmq.js')
 const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
 const sendTextMedia = async (req, res) => {
@@ -21,7 +21,7 @@ const sendTextMedia = async (req, res) => {
       content = { text: message }
     }
 
-    const sentMessage = await sendMessage({
+    const sentMessage = await enqueueOutboundMessage({
       phone,
       number,
       content,
@@ -30,7 +30,7 @@ const sendTextMedia = async (req, res) => {
     if (sentMessage)
       res.status(200).json({ message: 'Mensagem enviada com sucesso' })
   } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
+    res.status(400).json({ message: 'Erro ao enviar mensagem de midia' })
   }
 }
 
