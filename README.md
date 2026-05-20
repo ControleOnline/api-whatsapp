@@ -55,7 +55,8 @@ Exemplos:
 Observações operacionais:
 - a engine `baileys` continua dependendo das sessões restauradas em `data/connections` e `data/sessions`;
 - a engine `webjs` encaminha a mesma chamada `POST /messages/:phone` para um serviço remoto configurado em `WEBJS_API_URL`;
-- a engine `meta` aceita texto puro imediatamente e mídia por URL pública (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`), conforme as exigências da API oficial.
+- a engine `meta` aceita texto puro imediatamente e mídia por URL pública (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`), conforme as exigências da API oficial;
+- quando a requisição tiver upload de mídia e puder cair na engine `meta`, envie também a URL pública correspondente no mesmo request para que o roteador preserve compatibilidade entre as engines.
 
 ## Rotas Disponíveis
 
