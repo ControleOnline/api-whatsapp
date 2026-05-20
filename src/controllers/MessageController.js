@@ -6,7 +6,14 @@ const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
 const sendTextMedia = async (req, res) => {
   const { phone } = req.params
-  const { number, message = '' } = req.body
+  const {
+    number,
+    message = '',
+    imageUrl,
+    videoUrl,
+    audioUrl,
+    documentUrl,
+  } = req.body
   const media = req.files
 
   let content
@@ -16,6 +23,12 @@ const sendTextMedia = async (req, res) => {
       content = await prepareMediaMessageContent({
         media: media.file,
         body: message,
+        publicUrls: {
+          imageUrl,
+          videoUrl,
+          audioUrl,
+          documentUrl,
+        },
       })
     } else {
       content = { text: message }
