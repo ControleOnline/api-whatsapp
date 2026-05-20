@@ -1,6 +1,15 @@
 const axios = require('axios')
 const env = require('../../utils/Env')
 
+const META_MEDIA_URL_ERROR =
+  'A engine meta exige payload textual ou mídia publicada por URL (imageUrl, videoUrl, audioUrl ou documentUrl).'
+
+const requireMediaUrl = (value) => {
+  if (value) return value
+
+  throw new Error(META_MEDIA_URL_ERROR)
+}
+
 const resolveMetaPayload = ({ number, content }) => {
   if (content.text) {
     return {
@@ -18,7 +27,7 @@ const resolveMetaPayload = ({ number, content }) => {
       type: 'image',
       image: {
         caption: content.caption || '',
-        link: content.imageUrl,
+        link: requireMediaUrl(content.imageUrl),
       },
     }
   }
@@ -30,7 +39,7 @@ const resolveMetaPayload = ({ number, content }) => {
       type: 'video',
       video: {
         caption: content.caption || '',
-        link: content.videoUrl,
+        link: requireMediaUrl(content.videoUrl),
       },
     }
   }
@@ -40,7 +49,7 @@ const resolveMetaPayload = ({ number, content }) => {
       messaging_product: 'whatsapp',
       to: number,
       type: 'audio',
-      audio: { link: content.audioUrl },
+      audio: { link: requireMediaUrl(content.audioUrl) },
     }
   }
 
@@ -52,14 +61,12 @@ const resolveMetaPayload = ({ number, content }) => {
       document: {
         caption: content.caption || '',
         filename: content.fileName,
-        link: content.documentUrl,
+        link: requireMediaUrl(content.documentUrl),
       },
     }
   }
 
-  throw new Error(
-    'A engine meta exige payload textual ou mídia publicada por URL (imageUrl, videoUrl, audioUrl ou documentUrl).',
-  )
+  throw new Error(META_MEDIA_URL_ERROR)
 }
 
 const assertMetaConfig = () => {
@@ -89,4 +96,4 @@ const sendWithMeta = async ({ number, content }) => {
   }
 }
 
-module.exports = { sendWithMeta }
+module.exports = { sendWithMeta, resolveMetaPayload, META_MEDIA_URL_ERROR }
