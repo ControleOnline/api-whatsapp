@@ -27,6 +27,11 @@ Variáveis de ambiente necessárias:
 - `PORT`: porta onde a API irá rodar. Padrão: `3300`.
 - `API_KEY`: chave usada para autenticar o acesso aos endpoints.
 
+## Documentação técnica operacional
+
+- Índice versionado: [`docs/technical/README.md`](./docs/technical/README.md)
+- Workflow documental automático: [`docs/technical/technical-documenter-workflow.md`](./docs/technical/technical-documenter-workflow.md)
+
 ## Rotas Disponíveis
 
 #### Sessões (`/sessions`)
