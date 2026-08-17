@@ -2,11 +2,15 @@ const express = require('express')
 const fileUpload = require('express-fileupload')
 const fs = require('fs')
 const { initBaileysSocket } = require('./lib/libbaileys.js')
+const { initRabbitMQ, closeRabbitMQ } = require('./lib/queue/rabbitmq.js')
 const routes = require('./routes/index.js')
 const logger = require('./utils/logger.js')
 const cors = require('cors')
 const env = require('./utils/Env.js')
-const { startWhisperServer, stopWhisperServer } = require('./lib/helpers/whisperServer.js')
+const {
+  startWhisperServer,
+  stopWhisperServer,
+} = require('./lib/helpers/whisperServer.js')
 
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`)
@@ -54,6 +58,7 @@ const port = env.PORT || 9000
 
 const server = app.listen(port, '127.0.0.1', async () => {
   logger.info(`Servidor iniciado na porta ${port}`)
+  await initRabbitMQ()
   await restoreSessions()
   await startWhisperServer()
 })
@@ -76,20 +81,20 @@ async function restoreSessions() {
           const sessionData = JSON.parse(fileContent)
 
           if (sessionData.phone) {
-            logger.info(`Restaurando sessão: ${sessionData.phone}`)
+            logger.info(`Restaurando sessao: ${sessionData.phone}`)
             await initBaileysSocket(sessionData.phone)
             contador++
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise((resolve) => setTimeout(resolve, 500))
           }
         } catch (err) {
-          logger.error(`Erro ao restaurar sessão ${session}: ${err.message}`)
+          logger.error(`Erro ao restaurar sessao ${session}: ${err.message}`)
         }
       }
     }
 
-    logger.info(`Restauração de sessões concluída. Total de ${contador} sessões iniciadas.`)
+    logger.info(`Restauracao de sessoes concluida. Total de ${contador} sessoes iniciadas.`)
   } catch (error) {
-    logger.error(`Erro fatal na restauração de sessões: ${error.message}`)
+    logger.error(`Erro fatal na restauracao de sessoes: ${error.message}`)
   }
 }
 
@@ -98,12 +103,14 @@ function gracefulShutdown(signal) {
 
   server.close(async () => {
     logger.info('Servidor HTTP fechado.')
+    await closeRabbitMQ()
     await stopWhisperServer()
     process.exit(0)
   })
 
   setTimeout(async () => {
-    logger.error('Forçando encerramento.')
+    logger.error('Forcando encerramento.')
+    await closeRabbitMQ()
     await stopWhisperServer()
     process.exit(1)
   }, 10000)
