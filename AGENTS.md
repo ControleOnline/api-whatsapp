@@ -24,3 +24,7 @@
 ## Testes e evidencias
 - Quando nao houver teste automatizado viavel, publicar pelo menos evidencia tecnica objetiva da validacao do fluxo afetado.
 - Sempre que criar regra transversal nova neste repositorio, manter este `AGENTS.md` atualizado de forma concisa.
+
+## Qualidade de código
+
+- A barra comum de modularizacao, testes, smoke tests e limite de tamanho de componentes vive em `https://github.com/ControleOnline/agents-mcp/blob/master/skills/shared/code-quality.md`.
