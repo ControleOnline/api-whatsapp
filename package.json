@@ -7,7 +7,8 @@
     "dev": "node --watch ./src/server.js",
     "start": "node ./src/server.js",
     "lint": "eslint --ext .js src --fix",
-    "test": "node --test"
+    "test": "node --test",
+    "test:engines": "node --test src/tests/engineRouter.test.js src/tests/metaEngine.test.js"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +18,7 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "amqplib": "^0.10.4",
+    "amqplib": "^0.10.9",
     "axios": "^1.7.8",
     "baileys": "npm:whaileys@6.4.10",
     "better-sqlite3": "^12.6.2",

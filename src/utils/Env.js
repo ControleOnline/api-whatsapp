@@ -56,7 +56,14 @@ const ValidaBoolean = z
   .string()
   .optional()
   .default('0')
-  .transform((v) => ['1', 'true'].includes(v.toLowerCase()))
+  .transform((v) => ['1', 'true'].includes(String(v).toLowerCase()))
+
+const parseBoolean = (value, fallback = false) => {
+  if (value === undefined || value === null || value === '') return fallback
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase())
+}
+
+const engineStrategySchema = z.enum(['weighted-random']).default('weighted-random')
 
 const envSchema = z.object({
   HOST: z.string().ipv4().default('0.0.0.0'),
@@ -72,6 +79,17 @@ const envSchema = z.object({
   RABBITMQ_WEBHOOK_QUEUE: z.string().optional().default('whatsapp.webhooks'),
   RABBITMQ_OUTBOUND_QUEUE: z.string().optional().default('whatsapp.outbound'),
   RABBITMQ_PREFETCH: ValidaNumeroOpcional,
+  MESSAGE_ENGINES: z.string().default('baileys=100'),
+  MESSAGE_ENGINE_STRATEGY: engineStrategySchema,
+  WEBJS_API_URL: z.string().url().optional(),
+  WEBJS_API_KEY: z.string().optional(),
+  META_API_VERSION: z.string().default('v22.0'),
+  META_PHONE_NUMBER_ID: z.string().optional(),
+  META_ACCESS_TOKEN: z.string().optional(),
+  META_MARK_AS_READ: z
+    .string()
+    .optional()
+    .transform((value) => parseBoolean(value, true)),
 })
 
 const env = envSchema.parse(process.env)

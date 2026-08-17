@@ -81,3 +81,27 @@ Todas as rotas requerem autenticação através do middleware `isAuth`, que vali
 ## Validação
 
 As requisições são validadas através de schemas específicos para cada rota usando o middleware `validateData`.
+
+
+## Engines de envio (task-4)
+
+O endpoint de envio pode distribuir mensagens entre múltiplas engines por configuração em `.env`.
+
+Variáveis:
+- `MESSAGE_ENGINES`: engines de envio com pesos, separadas por vírgula. Exemplo: `baileys=70,meta=20,webjs=10`.
+- `MESSAGE_ENGINE_STRATEGY`: estratégia de balanceamento. Valor atual suportado: `weighted-random`.
+- `WEBJS_API_URL`: URL base da API remota compatível com `whatsapp-web.js`.
+- `WEBJS_API_KEY`: chave da API remota de `webjs`. Se omitida, a API reutiliza `API_KEY`.
+- `META_API_VERSION`: versão da Graph API. Padrão: `v22.0`.
+- `META_PHONE_NUMBER_ID`: identificador do número configurado no WhatsApp Cloud API.
+- `META_ACCESS_TOKEN`: token bearer da API oficial.
+- `META_MARK_AS_READ`: marca leitura no provedor oficial. Padrão: `true`.
+
+Engines suportadas:
+- `baileys`: envio local pela sessão mantida por esta API.
+- `webjs`: envio remoto para serviço HTTP configurado em `WEBJS_API_URL`.
+- `meta`: WhatsApp Cloud API (Meta).
+
+Observações:
+- Mídia na engine Meta exige URLs públicas (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`).
+- A resposta do endpoint pode incluir `engine` e `providerMessageId`.

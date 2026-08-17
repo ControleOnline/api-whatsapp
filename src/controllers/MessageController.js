@@ -6,7 +6,14 @@ const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
 const sendTextMedia = async (req, res) => {
   const { phone } = req.params
-  const { number, message = '' } = req.body
+  const {
+    number,
+    message = '',
+    imageUrl,
+    videoUrl,
+    audioUrl,
+    documentUrl,
+  } = req.body
   const media = req.files
 
   let content
@@ -16,6 +23,12 @@ const sendTextMedia = async (req, res) => {
       content = await prepareMediaMessageContent({
         media: media.file,
         body: message,
+        publicUrls: {
+          imageUrl,
+          videoUrl,
+          audioUrl,
+          documentUrl,
+        },
       })
     } else {
       content = { text: message }
@@ -27,10 +40,28 @@ const sendTextMedia = async (req, res) => {
       content,
     })
 
-    if (sentMessage)
-      res.status(200).json({ message: 'Mensagem enviada com sucesso' })
+    if (sentMessage) {
+      const payload = {
+        message: 'Mensagem enviada com sucesso',
+      }
+
+      if (typeof sentMessage === 'object') {
+        if (sentMessage.selectedEngine) {
+          payload.engine = sentMessage.selectedEngine
+        }
+        if (sentMessage.providerMessageId) {
+          payload.providerMessageId = sentMessage.providerMessageId
+        }
+      }
+
+      return res.status(200).json(payload)
+    }
+
+    return res.status(400).json({ message: 'Nao foi possivel enviar a mensagem' })
   } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
+    return res.status(400).json({
+      message: error.message || 'Erro ao enviar mensagem',
+    })
   }
 }
 

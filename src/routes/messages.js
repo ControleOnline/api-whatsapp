@@ -24,7 +24,7 @@ registry.registerPath({
   path: '/messages/{phone}',
   tags: ['Messages'],
   description:
-    'Envia a mensagem imediatamente ou a enfileira quando o RabbitMQ estiver habilitado.',
+    'Envia a mensagem imediatamente (com roteamento multi-engine) ou a enfileira quando o RabbitMQ estiver habilitado.',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -47,7 +47,11 @@ registry.registerPath({
       content: {
         'application/json': {
           schema: responseMessageSchema.openapi({
-            example: { message: 'Mensagem enviada com sucesso' },
+            example: {
+              message: 'Mensagem enviada com sucesso',
+              engine: 'baileys',
+              providerMessageId: '3EB0123456789',
+            },
           }),
         },
       },
