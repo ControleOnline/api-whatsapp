@@ -3,9 +3,7 @@ const MessageController = require('../controllers/MessageController.js')
 const isAuth = require('../middleware/isAuth.js')
 const validateData = require('../middleware/validateData.js')
 const MessageSchemas = require('../schemas/Controller/messageSchemas.js')
-const {
-  prepareMessageResponseSchema,
-} = require('../schemas/docs/preparemessageSchemas.js')
+const { prepareMessageResponseSchema } = require('../schemas/docs/preparemessageSchemas.js')
 const { responseMessageSchema } = require('../schemas/docs/responseMessage.js')
 const registry = require('../docs/registry.js')
 const { z } = require('../lib/zod.js')
@@ -23,8 +21,6 @@ registry.registerPath({
   method: 'post',
   path: '/messages/{phone}',
   tags: ['Messages'],
-  description:
-    'Envia a mensagem imediatamente ou a enfileira quando o RabbitMQ estiver habilitado.',
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
@@ -43,21 +39,25 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Mensagem enviada com sucesso ou enfileirada para envio',
+      description: 'Mensagem enviada com sucesso',
       content: {
         'application/json': {
           schema: responseMessageSchema.openapi({
-            example: { message: 'Mensagem enviada com sucesso' },
+            example: {
+              message: 'Mensagem enviada com sucesso',
+              engine: 'baileys',
+              providerMessageId: '3EB0123456789',
+            },
           }),
         },
       },
     },
     400: {
-      description: 'Erro ao enviar mensagem de mídia',
+      description: 'Erro ao enviar mensagem',
       content: {
         'application/json': {
           schema: responseMessageSchema.openapi({
-            example: { message: 'Erro ao enviar mensagem de mídia' },
+            example: { message: 'Erro ao enviar mensagem' },
           }),
         },
       },

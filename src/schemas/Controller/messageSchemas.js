@@ -8,20 +8,25 @@ const fileSchema = z.object({
   size: z.number(),
 })
 
+const publicMediaUrlFields = {
+  imageUrl: z.string().url().optional(),
+  videoUrl: z.string().url().optional(),
+  audioUrl: z.string().url().optional(),
+  documentUrl: z.string().url().optional(),
+}
+
 const sendMediaSchema = z.object({
-    number: z.string(),
-    file: fileSchema,
-    message: z.string().optional(),
+  number: z.string(),
+  file: fileSchema,
+  message: z.string().optional(),
+  ...publicMediaUrlFields,
 })
 
 const sendTextSchema = z.object({
-    number: z.string(),
-    message: z.string().min(1),
+  number: z.string(),
+  message: z.string().min(1),
 })
 
-const sendMessageSchema = z.union([
-  sendTextSchema,
-  sendMediaSchema,
-])
+const sendMessageSchema = z.union([sendTextSchema, sendMediaSchema])
 
 module.exports = { sendMessageSchema, sendTextSchema, sendMediaSchema }

@@ -26,32 +26,37 @@ Variáveis de ambiente necessárias:
 - `HOST`: endereço onde a API irá rodar. Padrão: `0.0.0.0`.
 - `PORT`: porta onde a API irá rodar. Padrão: `3300`.
 - `API_KEY`: chave usada para autenticar o acesso aos endpoints.
-- `WEBHOOK`: webhook padrão adicionado como fallback para listeners configurados por sessão.
-- `FROMME`: define se mensagens enviadas pela própria sessão também devem disparar listeners. Use `1` para habilitar.
-- `WA_VERSION`: versão fixa do WhatsApp Web no formato `major,minor,patch`.
-- `WHISPER_PORT`: porta opcional do servidor de transcrição.
-- `WHISPER_MODEL`: modelo opcional usado na transcrição.
+- `MESSAGE_ENGINES`: engines de envio com pesos, separadas por vírgula. Exemplo: `baileys=70,meta=20,webjs=10`.
+- `MESSAGE_ENGINE_STRATEGY`: estratégia de balanceamento. Valor atual suportado: `weighted-random`.
 
-### RabbitMQ opcional
+Configurações opcionais por engine:
 
-A integração com RabbitMQ é opcional. Quando desligada, a API mantém o comportamento atual: envia mensagens e webhooks diretamente.
+- `WEBJS_API_URL`: URL base da API remota compatível com `whatsapp-web.js`.
+- `WEBJS_API_KEY`: chave da API remota de `webjs`. Se omitida, a API reutiliza `API_KEY`.
+- `META_API_VERSION`: versão da Graph API. Padrão: `v22.0`.
+- `META_PHONE_NUMBER_ID`: identificador do número configurado no WhatsApp Cloud API.
+- `META_ACCESS_TOKEN`: token bearer da API oficial.
+- `META_MARK_AS_READ`: mantém compatibilidade com fluxos que precisam marcar leitura no provedor oficial. Padrão: `true`.
 
-Quando `RABBITMQ_ENABLED=1`, a API passa a:
-- enfileirar webhooks dos listeners `messaging-history.set`, `messages.upsert` e `messages.update`.
-- enfileirar envios feitos pelo endpoint `POST /messages/:phone`.
-- consumir essas filas no próprio processo da API.
+## Engines de envio
 
-Variáveis adicionais:
-- `RABBITMQ_ENABLED`: habilita o modo com filas. Aceita `1` ou `true`.
-- `RABBITMQ_URL`: URL de conexão com o broker. Obrigatória quando `RABBITMQ_ENABLED=1`.
-- `RABBITMQ_WEBHOOK_QUEUE`: nome da fila de webhooks. Padrão: `whatsapp.webhooks`.
-- `RABBITMQ_OUTBOUND_QUEUE`: nome da fila de mensagens de saída. Padrão: `whatsapp.outbound`.
-- `RABBITMQ_PREFETCH`: quantidade de mensagens consumidas simultaneamente por worker. Padrão: `5`.
+O endpoint de envio agora pode distribuir mensagens entre múltiplas engines por configuração em `.env`.
+
+Engines suportadas:
+- `baileys`: envio local pela sessão já mantida por esta API.
+- `webjs`: envio remoto para outra API compatível com `whatsapp-web.js`.
+- `meta`: envio direto para a API oficial do WhatsApp Cloud.
+
+Exemplos:
+- `MESSAGE_ENGINES=baileys=100`
+- `MESSAGE_ENGINES=meta=100`
+- `MESSAGE_ENGINES=baileys=90,webjs=10`
 
 Observações operacionais:
-- Se o RabbitMQ estiver habilitado e disponível, o HTTP `200` do endpoint de mensagens confirma que o item foi aceito para processamento, não necessariamente que o WhatsApp já concluiu a entrega.
-- Se o RabbitMQ estiver indisponível no boot ou durante a publicação, a API faz fallback para envio direto para evitar indisponibilidade da operação.
-- O endpoint `/health` continua independente de sessão ativa e do broker.
+- a engine `baileys` continua dependendo das sessões restauradas em `data/connections` e `data/sessions`;
+- a engine `webjs` encaminha a mesma chamada `POST /messages/:phone` para um serviço remoto configurado em `WEBJS_API_URL`;
+- a engine `meta` aceita texto puro imediatamente e mídia por URL pública (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`), conforme as exigências da API oficial;
+- quando a requisição tiver upload de mídia e puder cair na engine `meta`, envie também a URL pública correspondente no mesmo request para que o roteador preserve compatibilidade entre as engines.
 
 ## Rotas Disponíveis
 
@@ -71,8 +76,8 @@ Observações operacionais:
 - `POST /:telefone/read`: marca mensagens como lidas.
 
 #### Mensagens (`/messages`)
-- `POST /:telefone/send/text`: envia uma mensagem de texto.
-- `POST /:telefone/send/media`: envia uma mensagem com mídia, como imagem, vídeo, áudio ou documento.
+- `POST /:telefone`: envia uma mensagem usando a engine sorteada para a requisição.
+- `GET /:telefone/unread`: lista mensagens não lidas.
 
 ## Autenticação
 
