@@ -26,6 +26,32 @@ Variáveis de ambiente necessárias:
 - `HOST`: endereço onde a API irá rodar. Padrão: `0.0.0.0`.
 - `PORT`: porta onde a API irá rodar. Padrão: `3300`.
 - `API_KEY`: chave usada para autenticar o acesso aos endpoints.
+- `WEBHOOK`: webhook padrão adicionado como fallback para listeners configurados por sessão.
+- `FROMME`: define se mensagens enviadas pela própria sessão também devem disparar listeners. Use `1` para habilitar.
+- `WA_VERSION`: versão fixa do WhatsApp Web no formato `major,minor,patch`.
+- `WHISPER_PORT`: porta opcional do servidor de transcrição.
+- `WHISPER_MODEL`: modelo opcional usado na transcrição.
+
+### RabbitMQ opcional
+
+A integração com RabbitMQ é opcional. Quando desligada, a API mantém o comportamento atual: envia mensagens e webhooks diretamente.
+
+Quando `RABBITMQ_ENABLED=1`, a API passa a:
+- enfileirar webhooks dos listeners `messaging-history.set`, `messages.upsert` e `messages.update`.
+- enfileirar envios feitos pelo endpoint `POST /messages/:phone`.
+- consumir essas filas no próprio processo da API.
+
+Variáveis adicionais:
+- `RABBITMQ_ENABLED`: habilita o modo com filas. Aceita `1` ou `true`.
+- `RABBITMQ_URL`: URL de conexão com o broker. Obrigatória quando `RABBITMQ_ENABLED=1`.
+- `RABBITMQ_WEBHOOK_QUEUE`: nome da fila de webhooks. Padrão: `whatsapp.webhooks`.
+- `RABBITMQ_OUTBOUND_QUEUE`: nome da fila de mensagens de saída. Padrão: `whatsapp.outbound`.
+- `RABBITMQ_PREFETCH`: quantidade de mensagens consumidas simultaneamente por worker. Padrão: `5`.
+
+Observações operacionais:
+- Se o RabbitMQ estiver habilitado e disponível, o HTTP `200` do endpoint de mensagens confirma que o item foi aceito para processamento, não necessariamente que o WhatsApp já concluiu a entrega.
+- Se o RabbitMQ estiver indisponível no boot ou durante a publicação, a API faz fallback para envio direto para evitar indisponibilidade da operação.
+- O endpoint `/health` continua independente de sessão ativa e do broker.
 
 ## Rotas Disponíveis
 

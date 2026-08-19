@@ -1,26 +1,22 @@
-const axios = require('axios')
 const fetchWebHook = require('../utils/fetchWebHook.js')
 const logger = require('../utils/logger.js')
 const prepareMessageData = require('./handlers/prepareMessageData.js')
 const isValidMsg = require('./helpers/isValidMessage.js')
 const env = require('../utils/Env.js')
-const {readFileSync, writeFileSync} = require("fs");
+const { enqueueWebhookDelivery } = require('./queue/rabbitmq.js')
+const { readFileSync, writeFileSync } = require('fs')
 const slugfy = require('../utils/slugfy.js')
 
 const sendWebhook = async (webhookUrl, data) => {
   try {
-    await axios.post(webhookUrl, data, {
-      headers: {
-        'api-token': env.API_KEY,
-      },
-    })
+    await enqueueWebhookDelivery({ webhookUrl, data })
   } catch (error) {
     logger.error(error)
   }
 }
 
 const baileysMessageListeners = (wbot, phone) => {
-  logger.info(`Iniciando sessão ${phone}`)
+  logger.info(`Iniciando sessao ${phone}`)
 
   wbot.ev.on('messaging-history.set', async (data) => {
     const chatsNaoLidos = []
@@ -41,7 +37,7 @@ const baileysMessageListeners = (wbot, phone) => {
               conversa &&
               conversa.messages.length < (chat.unreadCount || 0)
             ) {
-              conversas?.find((t) => t.key === chat.id)?.messages.push(message)
+              conversas.find((t) => t.key === chat.id)?.messages.push(message)
             }
           }
         }
@@ -111,45 +107,43 @@ const baileysMessageListeners = (wbot, phone) => {
         })
       }
     }
-  });
+  })
 
-  wbot.ev.on("contacts.upsert", async (contacts) => {
+  wbot.ev.on('contacts.upsert', async (contacts) => {
     let contactsJSONExists
     try {
-      contactsJSONExists = readFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`
-      );
+      contactsJSONExists = readFileSync(`data/sessions/${slugfy(wbot.phone)}.json`)
     } catch (error) {
-      contactsJSONExists = null;
+      contactsJSONExists = null
     }
 
     if (contactsJSONExists) {
-      let convertFileJSON = JSON.parse(contactsJSONExists.toString());
+      let convertFileJSON = JSON.parse(contactsJSONExists.toString())
 
       if (
-          contacts &&
-          typeof convertFileJSON === "object" &&
-          convertFileJSON.length > 0
+        contacts &&
+        typeof convertFileJSON === 'object' &&
+        convertFileJSON.length > 0
       ) {
         for await (const contact of contacts) {
           convertFileJSON = convertFileJSON.filter(
-              (value) => value.id !== contact.id
-          );
-          convertFileJSON.push(contact);
+            (value) => value.id !== contact.id,
+          )
+          convertFileJSON.push(contact)
         }
       }
 
       return writeFileSync(
-          `data/sessions/${slugfy(wbot.phone)}.json`,
-          JSON.stringify(convertFileJSON)
-      );
+        `data/sessions/${slugfy(wbot.phone)}.json`,
+        JSON.stringify(convertFileJSON),
+      )
     }
 
     return writeFileSync(
-        `data/sessions/${slugfy(wbot.phone)}.json`,
-        JSON.stringify(contacts)
-    );
-  });
+      `data/sessions/${slugfy(wbot.phone)}.json`,
+      JSON.stringify(contacts),
+    )
+  })
 }
 
 module.exports = { baileysMessageListeners, sendWebhook }

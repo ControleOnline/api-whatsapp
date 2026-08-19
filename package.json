@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch ./src/server.js",
     "start": "node ./src/server.js",
-    "lint": "eslint --ext .js src --fix"
+    "lint": "eslint --ext .js src --fix",
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
@@ -16,8 +17,9 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "amqplib": "^0.10.4",
     "axios": "^1.7.8",
-    "baileys": "npm:whaileys",
+    "baileys": "npm:whaileys@6.4.10",
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
