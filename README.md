@@ -17,7 +17,7 @@ O JSON da sessão deve conter as seguintes informações:
 
 Observação: listeners sem webhook configurado não serão chamados.
 
-As conexões com o WhatsApp são feitas através de QR Code, obtido pelo endpoint `/qrcode/:telefone` dentro da rota `/sessions`. A resposta retorna a URL usada para gerar o QR Code no frontend. Os dados da conexão são armazenados na pasta `./data`, separados por sessão.
+As conexões com o WhatsApp são feitas através de QR Code, obtido pelo endpoint `/qrcode/:telefone` dentro da rota `/sessions`. A resposta retorna a URL usada para gerar o QR Code no frontend. Os dados da conexão são armazenados por padrão na pasta `./data` (ou em Redis/Memcache quando `STORAGE_DRIVER` for configurado), separados por sessão.
 
 ## Configuração
 
@@ -47,6 +47,20 @@ Variáveis adicionais:
 - `RABBITMQ_WEBHOOK_QUEUE`: nome da fila de webhooks. Padrão: `whatsapp.webhooks`.
 - `RABBITMQ_OUTBOUND_QUEUE`: nome da fila de mensagens de saída. Padrão: `whatsapp.outbound`.
 - `RABBITMQ_PREFETCH`: quantidade de mensagens consumidas simultaneamente por worker. Padrão: `5`.
+
+### Armazenamento de sessões (filesystem / Redis / Memcache)
+
+Por padrão a API grava metadados de sessão, snapshots de contatos e o auth state do Baileys em `./data/connections` e `./data/sessions` (`STORAGE_DRIVER=filesystem`).
+
+É possível apontar o mesmo contrato para Redis ou Memcache via `.env`:
+
+- `STORAGE_DRIVER`: `filesystem` (padrão), `redis` ou `memcache`.
+- `STORAGE_PREFIX`: prefixo das chaves no backend remoto. Padrão: `api-whatsapp`.
+- `REDIS_URL`: obrigatória quando `STORAGE_DRIVER=redis` (ex.: `redis://127.0.0.1:6379`).
+- `MEMCACHE_SERVERS`: obrigatória quando `STORAGE_DRIVER=memcache` (ex.: `127.0.0.1:11211`).
+- `MEMCACHE_USERNAME` / `MEMCACHE_PASSWORD`: credenciais opcionais do Memcache.
+
+A restauração automática de sessões no boot e os endpoints de `/sessions` usam o mesmo adapter. Trocar o driver não altera o contrato HTTP público.
 
 Observações operacionais:
 - Se o RabbitMQ estiver habilitado e disponível, o HTTP `200` do endpoint de mensagens confirma que o item foi aceito para processamento, não necessariamente que o WhatsApp já concluiu a entrega.
