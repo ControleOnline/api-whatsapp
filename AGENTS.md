@@ -28,3 +28,23 @@
 ## Qualidade de código
 
 - A barra comum de modularizacao, testes, smoke tests e limite de tamanho de componentes vive em `https://github.com/ControleOnline/agents-mcp/blob/master/skills/shared/code-quality.md`.
+
+## Documentação (navegação humana)
+
+| Categoria | Destino |
+| --- | --- |
+| Home do módulo | `https://github.com/ControleOnline/api-whatsapp/wiki` |
+| Espelho versionado | `docs/technical/README.md` |
+
+### Por categoria — automações e operação
+
+| Página | O que documenta |
+| --- | --- |
+| `docs/technical/technical-documenter-workflow.md` | orquestração manager-worker + subworker technical-documenter (legado technical-documenter.yml removido) |
+
+### Módulos relacionados
+
+| Módulo | Entrada |
+| --- | --- |
+| `ControleOnline/api-whatsapp` wiki | `https://github.com/ControleOnline/api-whatsapp/wiki` |
+| `ControleOnline/agents-mcp` | `https://github.com/ControleOnline/agents-mcp` |
