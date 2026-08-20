@@ -119,3 +119,13 @@ Engines suportadas:
 Observações:
 - Mídia na engine Meta exige URLs públicas (`imageUrl`, `videoUrl`, `audioUrl`, `documentUrl`).
 - A resposta do endpoint pode incluir `engine` e `providerMessageId`.
+
+## Documentação técnica operacional
+
+Espelho versionado da documentação técnica (fallback auditável no Git; a wiki continua sendo a fonte primária de leitura humana):
+
+- Índice: [`docs/technical/README.md`](./docs/technical/README.md)
+- Manager Worker / technical-documenter: [`docs/technical/technical-documenter-workflow.md`](./docs/technical/technical-documenter-workflow.md)
+
+Wiki do módulo: https://github.com/ControleOnline/api-whatsapp/wiki
+
