@@ -100,3 +100,12 @@ Todas as rotas requerem autenticação através do middleware `isAuth`, que vali
 ## Validação
 
 As requisições são validadas através de schemas específicos para cada rota usando o middleware `validateData`.
+
+## Documentação técnica operacional
+
+Espelho versionado da documentação técnica (fallback auditável no Git; a wiki continua sendo a fonte primária de leitura humana):
+
+- Índice: [`docs/technical/README.md`](./docs/technical/README.md)
+- Workflow `technical-documenter.yml`: [`docs/technical/technical-documenter-workflow.md`](./docs/technical/technical-documenter-workflow.md)
+
+Wiki do módulo: https://github.com/ControleOnline/api-whatsapp/wiki
