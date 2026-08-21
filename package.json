@@ -26,7 +26,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
     "express-fileupload": "^1.5.1",
-    "link-preview-js": "2.1.17",
+    "link-preview-js": "2.1.19",
     "node-cache": "^5.1.2",
     "pino": "^9.5.0",
     "pino-pretty": "^13.0.0",
