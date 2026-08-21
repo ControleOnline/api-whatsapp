@@ -20,7 +20,7 @@ const processAudio = async (audio) => {
   })
 }
 
-const prepareMediaMessageContent = async ({ media, body }) => {
+const prepareMediaMessageContent = async ({ media, body, publicUrls = {} }) => {
   const writeFileAsync = promisify(writeFile)
   let mediaRequest
   const mimetype = mime.lookup(media.name)
@@ -32,11 +32,13 @@ const prepareMediaMessageContent = async ({ media, body }) => {
     mediaRequest = {
       caption: body,
       image: media.data,
+      imageUrl: publicUrls.imageUrl,
     }
   } else if (isVideo(mimetype)) {
     mediaRequest = {
       caption: body,
       video: media.data,
+      videoUrl: publicUrls.videoUrl,
     }
   } else if (isAudio(mimetype)) {
     const pathAudio = `${pathTmp}/${media.name}`
@@ -47,6 +49,7 @@ const prepareMediaMessageContent = async ({ media, body }) => {
       mediaRequest = {
         caption: body,
         audio: readFileSync(convert),
+        audioUrl: publicUrls.audioUrl,
         mimetype: 'audio/mp4',
         ptt: true,
       }
@@ -55,6 +58,7 @@ const prepareMediaMessageContent = async ({ media, body }) => {
       mediaRequest = {
         caption: body,
         audio: media.data,
+        audioUrl: publicUrls.audioUrl,
         mimetype,
       }
     }
@@ -62,6 +66,7 @@ const prepareMediaMessageContent = async ({ media, body }) => {
     mediaRequest = {
       caption: body,
       document: media.data,
+      documentUrl: publicUrls.documentUrl,
       mimetype,
       fileName: media.name,
     }

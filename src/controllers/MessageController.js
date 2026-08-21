@@ -1,12 +1,19 @@
 const {
   prepareMediaMessageContent,
 } = require('../lib/helpers/prepareMediaMessageContent.js')
-const { enqueueOutboundMessage } = require('../lib/queue/rabbitmq.js')
+const sendMessage = require('../lib/helpers/sendMessage.js')
 const GetAllUnreadMessages = require('../lib/helpers/unreadMessages')
 
 const sendTextMedia = async (req, res) => {
   const { phone } = req.params
-  const { number, message = '' } = req.body
+  const {
+    number,
+    message = '',
+    imageUrl,
+    videoUrl,
+    audioUrl,
+    documentUrl,
+  } = req.body
   const media = req.files
 
   let content
@@ -16,21 +23,36 @@ const sendTextMedia = async (req, res) => {
       content = await prepareMediaMessageContent({
         media: media.file,
         body: message,
+        publicUrls: {
+          imageUrl,
+          videoUrl,
+          audioUrl,
+          documentUrl,
+        },
       })
     } else {
       content = { text: message }
     }
 
-    const sentMessage = await enqueueOutboundMessage({
+    const sentMessage = await sendMessage({
       phone,
       number,
       content,
     })
 
-    if (sentMessage)
-      res.status(200).json({ message: 'Mensagem enviada com sucesso' })
+    if (sentMessage) {
+      return res.status(200).json({
+        message: 'Mensagem enviada com sucesso',
+        engine: sentMessage.selectedEngine,
+        providerMessageId: sentMessage.providerMessageId,
+      })
+    }
+
+    return res.status(400).json({ message: 'Não foi possível enviar a mensagem' })
   } catch (error) {
-    res.status(400).json({ message: 'Erro ao enviar mensagem de mídia' })
+    return res.status(400).json({
+      message: error.message || 'Erro ao enviar mensagem',
+    })
   }
 }
 
