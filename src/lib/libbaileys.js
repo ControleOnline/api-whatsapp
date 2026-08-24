@@ -1,21 +1,22 @@
-const NodeCache = require( "node-cache");
+const NodeCache = require('node-cache')
 const {
   default: makeWASocket,
   DisconnectReason,
   fetchLatestWaWebVersion,
   makeCacheableSignalKeyStore,
-  useMultiFileAuthState,
   isJidBroadcast,
   isJidNewsletter,
-  isJidGroup
+  isJidGroup,
 } = require('baileys')
 const P = require('pino')
 const { format } = require('date-fns')
-const fs = require('fs')
 const logger = require('../utils/logger.js')
 const slugfy = require('../utils/slugfy.js')
 const { baileysMessageListeners } = require('./listeners.js')
 const env = require('../utils/Env.js')
+const { createSessionStorage } = require('./storage/sessionStorage.js')
+
+const sessionStorage = createSessionStorage()
 
 const loggerBaileys = P({
   timestamp: () => `,"time":"${new Date().toJSON()}"`,
@@ -73,26 +74,9 @@ const removeWbot = async (phone) => {
   }
 
   try {
-    fs.rmSync(`data/connections/${phone}.json`, {
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
-
-  try {
-    fs.rmSync(`data/sessions/${phone}`, {
-      recursive: true,
-      force: true,
-    })
-  } catch (error) {
-    logger.error(error)
-  }
-
-  try {
-    fs.rmSync(`data/sessions/${phone}.json`, {
-      force: true,
-    })
+    await sessionStorage.deleteSession(phone)
+    await sessionStorage.deleteContacts(phone)
+    await sessionStorage.deleteAuthState(phone)
   } catch (error) {
     logger.error(error)
   }
@@ -118,8 +102,7 @@ const initBaileysSocket = async (phone) => {
   return new Promise(async (resolve, reject) => {
     try {
       // Será armazenado por cliente, cada cliente pode ter mais de uma sessão
-      const sessionPath = `data/sessions/${phone}`
-      const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
+      const { state, saveCreds } = await sessionStorage.createAuthState(phone)
 
       let retriesQrCode = 0
       const sock = makeWASocket({
@@ -167,9 +150,8 @@ const initBaileysSocket = async (phone) => {
 
           if (retries && retries > 3) {
             try {
-              const path = `data/sessions/${slugfy(phone)}.json`
-
-              if (fs.existsSync(path)) fs.unlinkSync(path)
+              await sessionStorage.deleteContacts(phone)
+              await sessionStorage.deleteAuthState(phone)
             } catch (e) {
               logger.error('Erro ao excluir a sessão', e)
             }

@@ -1,6 +1,5 @@
 const express = require('express')
 const fileUpload = require('express-fileupload')
-const fs = require('fs')
 const { initBaileysSocket } = require('./lib/libbaileys.js')
 const { initRabbitMQ, closeRabbitMQ } = require('./lib/queue/rabbitmq.js')
 const routes = require('./routes/index.js')
@@ -11,6 +10,7 @@ const {
   startWhisperServer,
   stopWhisperServer,
 } = require('./lib/helpers/whisperServer.js')
+const { createSessionStorage } = require('./lib/storage/sessionStorage.js')
 
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`)
@@ -25,6 +25,7 @@ process.setMaxListeners(0)
 require('events').EventEmitter.defaultMaxListeners = 0
 
 const app = express()
+const sessionStorage = createSessionStorage()
 
 app.use(fileUpload({ limits: { fileSize: 100 * 1024 * 1024 } }))
 
@@ -65,34 +66,29 @@ const server = app.listen(port, '127.0.0.1', async () => {
 
 async function restoreSessions() {
   try {
-    if (!fs.existsSync('data/connections')) return
-
-    const sessions = fs.readdirSync('data/connections')
+    const sessions = await sessionStorage.listSessions()
     if (!sessions.length) return
 
-    logger.info(`Encontradas ${sessions.length} arquivos na pasta sessions.`)
+    logger.info(`Encontradas ${sessions.length} sessoes para restauracao.`)
 
     let contador = 0
 
     for (const session of sessions) {
-      if (session !== '.gitignore' && session.endsWith('.json')) {
+      if (session?.phone) {
         try {
-          const fileContent = fs.readFileSync(`data/connections/${session}`, 'utf8')
-          const sessionData = JSON.parse(fileContent)
-
-          if (sessionData.phone) {
-            logger.info(`Restaurando sessao: ${sessionData.phone}`)
-            await initBaileysSocket(sessionData.phone)
-            contador++
-            await new Promise((resolve) => setTimeout(resolve, 500))
-          }
+          logger.info(`Restaurando sessao: ${session.phone}`)
+          await initBaileysSocket(session.phone)
+          contador++
+          await new Promise((resolve) => setTimeout(resolve, 500))
         } catch (err) {
-          logger.error(`Erro ao restaurar sessao ${session}: ${err.message}`)
+          logger.error(`Erro ao restaurar sessao ${session.phone}: ${err.message}`)
         }
       }
     }
 
-    logger.info(`Restauracao de sessoes concluida. Total de ${contador} sessoes iniciadas.`)
+    logger.info(
+      `Restauracao de sessoes concluida. Total de ${contador} sessoes iniciadas.`,
+    )
   } catch (error) {
     logger.error(`Erro fatal na restauracao de sessoes: ${error.message}`)
   }
