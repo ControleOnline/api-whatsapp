@@ -11,20 +11,6 @@ const ValidaNumeros = z.string().refine(
   { message: 'Numero Invalido' },
 )
 
-const ValidaNumeroOpcional = z
-  .string()
-  .optional()
-  .default('5')
-  .transform((v) => {
-    const numero = Number(v)
-
-    if (isNaN(numero) || v?.length === 0) {
-      throw new Error('Numero Invalido')
-    }
-
-    return numero
-  })
-
 const ValidaWaVersion = z
   .string()
   .optional()
@@ -35,7 +21,7 @@ const ValidaWaVersion = z
 
     if (parts.length !== 3) {
       throw new Error(
-        'WA_VERSION deve ter 3 numeros separados por virgula (ex: 2,3000,1023223821)',
+        'WA_VERSION deve ter 3 números separados por vírgula (ex: 2,3000,1023223821)',
       )
     }
 
@@ -43,7 +29,7 @@ const ValidaWaVersion = z
       const num = Number(p)
       if (isNaN(num)) {
         throw new Error(
-          `WA_VERSION contem valor invalido: "${p}". Use apenas numeros.`,
+          `WA_VERSION contém valor inválido: "${p}". Use apenas números.`,
         )
       }
       return num
@@ -52,18 +38,18 @@ const ValidaWaVersion = z
     return version
   })
 
-const ValidaBoolean = z
-  .string()
-  .optional()
-  .default('0')
-  .transform((v) => ['1', 'true'].includes(String(v).toLowerCase()))
-
 const parseBoolean = (value, fallback = false) => {
   if (value === undefined || value === null || value === '') return fallback
   return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase())
 }
 
 const engineStrategySchema = z.enum(['weighted-random']).default('weighted-random')
+
+const ValidaBoolean = z
+  .string()
+  .optional()
+  .default('0')
+  .transform((v) => ['1', 'true'].includes(String(v).toLowerCase()))
 
 const storageDriverSchema = z
   .enum(['filesystem', 'redis', 'memcache'])
@@ -79,11 +65,6 @@ const envSchema = z
     WA_VERSION: ValidaWaVersion,
     WHISPER_PORT: z.string().optional(),
     WHISPER_MODEL: z.string().optional(),
-    RABBITMQ_ENABLED: ValidaBoolean,
-    RABBITMQ_URL: z.string().optional(),
-    RABBITMQ_WEBHOOK_QUEUE: z.string().optional().default('whatsapp.webhooks'),
-    RABBITMQ_OUTBOUND_QUEUE: z.string().optional().default('whatsapp.outbound'),
-    RABBITMQ_PREFETCH: ValidaNumeroOpcional,
     MESSAGE_ENGINES: z.string().default('baileys=100'),
     MESSAGE_ENGINE_STRATEGY: engineStrategySchema,
     WEBJS_API_URL: z.string().url().optional(),
@@ -95,6 +76,11 @@ const envSchema = z
       .string()
       .optional()
       .transform((value) => parseBoolean(value, true)),
+    RABBITMQ_ENABLED: ValidaBoolean,
+    RABBITMQ_URL: z.string().optional(),
+    RABBITMQ_WEBHOOK_QUEUE: z.string().optional().default('whatsapp.webhooks'),
+    RABBITMQ_OUTBOUND_QUEUE: z.string().optional().default('whatsapp.outbound'),
+    RABBITMQ_PREFETCH: ValidaNumeroOpcional,
     STORAGE_DRIVER: storageDriverSchema,
     STORAGE_PREFIX: z.string().default('api-whatsapp'),
     REDIS_URL: z.string().optional(),
