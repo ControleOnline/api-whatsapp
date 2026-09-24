@@ -104,8 +104,8 @@ const deliverWebhook = async ({ webhookUrl, data }) => {
 }
 
 const deliverOutboundMessage = async ({ phone, number, content }) => {
-  const result = await sendMessage({ phone, number, content })
-  return result || true
+  await sendMessage({ phone, number, content })
+  return true
 }
 
 const startConsumers = async (targetChannel) => {
